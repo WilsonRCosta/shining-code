@@ -4,12 +4,7 @@ Shining Code is a full-stack clothing store web app inspired by clean, minimal f
 Users can browse products by category, search and filter items, add favorites to a wishlist, and manage a shopping cart.
 An admin area is included for managing products, pricing, discounts, and product images.
 
-<a href="https://shining-code.onrender.com" target="_blank" style="display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #ccc; border-radius:10px; text-decoration:none; font-weight:600; cursor: pointer">
-  <img src="client/public/favicon.png" alt="Shining Code" height="50" style="vertical-align:middle;" />
-  <span style="vertical-align:middle; margin-left:8px; font-weight:1000;font-size: 20px;">
-    Check live
-  </span>
-</a>
+[![Check live](https://img.shields.io/badge/shining_code-click_for_live_demo-green?style=for-the-badge)](https://shining-code.onrender.com)
 
 ## Preview
 

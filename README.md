@@ -31,3 +31,11 @@
 	- React-color (Color picker)
 ### Database
 	- MongoDB
+
+
+## Screenshots
+
+![Home page](client/public/readme/home.png)
+![Product page](client/public/readme/catalog.png)
+![Wishlist](client/public/readme/wishlist.png)
+![Shopping Bag](client/public/readme/bag.png)

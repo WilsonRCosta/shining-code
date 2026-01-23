@@ -10,9 +10,7 @@ export const updateLocalCart = (product) => {
     let cartProd = cartArray.find((c) => c.code === product.code);
     if (cartProd) {
       cartProd.quantity += product.quantity;
-      cartProd.finalPrice = (
-        +cartProd.finalPrice + +product.finalPrice
-      ).toFixed(2);
+      cartProd.finalPrice = (+cartProd.finalPrice + +product.finalPrice).toFixed(2);
     } else cartArray.push(product);
     localStorage.setItem(shoppingCartKey, JSON.stringify(cartArray));
   }
@@ -31,11 +29,18 @@ export const updateLocalWishlist = (item) => {
 };
 
 export const deleteFromLocalStorage = (src, code) => {
-  let key = ''
-  switch(src) {
-    case 'wish' : { key = wishlistKey; break; }
-    case 'cart' : { key = shoppingCartKey; break; }
-    default: throw new Error('Error! Unknown source to perform delete action.')
+  let key = "";
+  switch (src) {
+    case "wish": {
+      key = wishlistKey;
+      break;
+    }
+    case "cart": {
+      key = shoppingCartKey;
+      break;
+    }
+    default:
+      throw new Error("Error! Unknown source to perform delete action.");
   }
   let localCart = JSON.parse(localStorage.getItem(key));
   const localItemIdx = localCart.findIndex((i) => i.code === code);

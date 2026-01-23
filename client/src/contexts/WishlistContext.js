@@ -10,9 +10,7 @@ const WishlistContextProvider = (props) => {
   );
 
   return (
-    <WishlistContext.Provider
-      value={{ wishlist: wishlist, setWishlist: setWishlist }}
-    >
+    <WishlistContext.Provider value={{ wishlist: wishlist, setWishlist: setWishlist }}>
       {props.children}
     </WishlistContext.Provider>
   );

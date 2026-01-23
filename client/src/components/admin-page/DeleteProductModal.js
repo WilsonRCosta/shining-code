@@ -1,63 +1,105 @@
 import React, { useState, useContext } from "react";
-import { Modal, Button } from "semantic-ui-react";
 import clothesService from "../../service/serviceAPI";
 import { UserContext } from "../../contexts/UserContext";
 import { useSnackbar } from "notistack";
+import { FaTrash } from "react-icons/fa";
 
 export default function DeleteProductModal({ clothes, setClothes, product }) {
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const { tokenProvider } = useContext(UserContext);
-  const [token, setToken] = tokenProvider;
+  const [token] = tokenProvider;
+
   const { enqueueSnackbar } = useSnackbar();
 
-  const handleDeleteProduct = () => {
-    clothesService()
-      .deleteProduct(product.code, token)
-      .then((res) => {
-        setOpen(false);
-        enqueueSnackbar(res.msg, { variant: res.type });
-        if (res.type === "error") return;
-        let newClothes = [...clothes];
-        let prodIndex = newClothes.findIndex((cl) => cl.code === product.code);
-        newClothes.splice(prodIndex, 1);
-        setClothes(newClothes);
-      });
+  const handleDeleteProduct = async () => {
+    try {
+      setSubmitting(true);
+
+      const res = await clothesService().deleteProduct(product.code, token);
+
+      enqueueSnackbar(res.msg, { variant: res.type });
+
+      if (res.type === "error") {
+        setSubmitting(false);
+        return;
+      }
+
+      setClothes((prev) => prev.filter((cl) => cl.code !== product.code));
+      setOpen(false);
+      setSubmitting(false);
+    } catch (err) {
+      enqueueSnackbar(err?.message || "Failed to delete product", { variant: "error" });
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Modal
-      style={{ borderRadius: 0 }}
-      closeIcon
-      onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
-      open={open}
-      trigger={
-        <Button
-          style={{ backgroundColor: "#ccc", color: "Black" }}
-          compact
-          circular
-          icon="delete"
-        />
-      }
-    >
-      <Modal.Header style={{ backgroundColor: "#ddd" }}>
-        Delete Product
-      </Modal.Header>
-      <Modal.Content>
-        Are you sure you want to delete this product?
-      </Modal.Content>
-      <Modal.Actions style={{ backgroundColor: "#ddd" }}>
-        <Button
-          onClick={() => setOpen(false)}
-          content="No"
-          style={{ borderRadius: 0, color: "Black", backgroundColor: "White" }}
-        />
-        <Button
-          onClick={() => handleDeleteProduct()}
-          content="Yes"
-          style={{ borderRadius: 0, color: "White", backgroundColor: "Black" }}
-        />
-      </Modal.Actions>
-    </Modal>
+    <>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-black/10 bg-white hover:border-black/30 transition"
+        aria-label="Delete product"
+        title="Delete"
+      >
+        <FaTrash className="text-neutral-700" size={14} />
+      </button>
+
+      {/* Modal */}
+      {open && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <button
+            type="button"
+            onClick={() => !submitting && setOpen(false)}
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close delete modal"
+          />
+
+          {/* Panel */}
+          <div className="relative mx-auto mt-28 w-[92%] max-w-md bg-white border border-black/10 shadow-xl">
+            <div className="px-6 py-4 border-b border-black/10">
+              <h2 className="text-sm font-semibold tracking-[0.18em] uppercase text-black">
+                Delete product
+              </h2>
+            </div>
+
+            <div className="px-6 py-6">
+              <p className="text-sm text-neutral-700">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-black">{product?.name}</span> (
+                {product?.code})?
+              </p>
+              <p className="mt-2 text-xs text-neutral-500">
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 border-t border-black/10 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={submitting}
+                className="px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-600 hover:text-black disabled:opacity-40"
+              >
+                No
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={submitting}
+                className="bg-black text-white px-5 py-2.5 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 disabled:opacity-40 transition"
+              >
+                {submitting ? "Deleting..." : "Yes, delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

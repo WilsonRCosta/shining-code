@@ -24,7 +24,7 @@
 	- React
 	- React Hooks (useState, useEffect, useContext, createContext)
 	- React-Dom (linking)
-	- Semantic UI (styles)
+	- Tailwind CSS
 	- Filepond (File Upload handler)
 	- Hex-to-color (Get color name from hex-code)
 	- Axios (Request handler)

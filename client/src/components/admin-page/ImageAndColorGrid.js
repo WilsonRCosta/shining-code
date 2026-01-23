@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { SketchPicker } from "react-color";
-import { Button, Grid, Label } from "semantic-ui-react";
 import { FilePond, registerPlugin } from "react-filepond";
 
 import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
@@ -23,91 +22,105 @@ export default function ProductImageAndColor({
   activeImageAndColor,
   setActiveImageAndColor,
 }) {
-  const [currColor, setCurrColor] = useState();
+  const [currColor, setCurrColor] = useState("");
   const [currFiles, setCurrFiles] = useState([]);
-  const [colsNumber, setColsNumber] = useState(1);
+
+  const showPicker = currFiles.length > 0;
+
+  const canConfirm = useMemo(() => {
+    return currFiles.length > 0 && Boolean(currColor);
+  }, [currFiles.length, currColor]);
+
+  const handleFiles = (filepondItems) => {
+    // filepondItems is array of { file, ... }
+    setCurrFiles(filepondItems.map((item) => item.file));
+    if (filepondItems.length === 0) setCurrColor("");
+  };
 
   const addImageAndColorToArray = () => {
-    let newProduct = { ...product };
-    newProduct.colors.push(currColor);
-    currFiles.forEach((image) => {
-      newProduct.images.push({
-        name: image.name,
-        type: image.name.slice(image.name.indexOf(".") + 1),
-        color: currColor,
-        data: null,
-      });
-      newProduct.files.push(image);
-    });
-    setProduct(newProduct);
+    if (!canConfirm) return;
+
+    const newImages = currFiles.map((image) => ({
+      name: image.name,
+      type: image.name.slice(image.name.lastIndexOf(".") + 1),
+      color: currColor,
+      data: null,
+    }));
+
+    setProduct((prev) => ({
+      ...prev,
+      colors: Array.from(new Set([...(prev.colors || []), currColor])),
+      images: [...(prev.images || []), ...newImages],
+      files: [...(prev.files || []), ...currFiles],
+    }));
+
     setActiveImageAndColor(!activeImageAndColor);
   };
 
-  const handleFiles = (filepond) => {
-    filepond.length > 0 ? setColsNumber(2) : setColsNumber(1);
-    setCurrFiles(filepond.map((file) => file.file));
-  };
-
   return (
-    <Grid centered columns={colsNumber}>
-      <Grid.Row>
-        <Grid.Column>
+    <div className="w-full">
+      <div className={`grid gap-6 ${showPicker ? "md:grid-cols-2" : "grid-cols-1"}`}>
+        {/* Upload */}
+        <div className="border border-black/10 p-4">
+          <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600 mb-3">
+            Upload images
+          </div>
+
           <FilePond
             allowFileTypeValidation
             acceptedFileTypes={["image/*"]}
             labelFileTypeNotAllowed="File is not an image."
             fileValidateTypeLabelExpectedTypes={""}
             files={currFiles}
-            onupdatefiles={(filepond) => handleFiles(filepond)}
+            onupdatefiles={handleFiles}
             allowMultiple={true}
             maxFiles={5}
-            labelIdle={
-              'Upload images <span class="filepond--label-action">here</span>'
-            }
+            labelIdle={'Upload images <span class="filepond--label-action">here</span>'}
           />
-        </Grid.Column>
-        <Grid.Column floated="right" width={6}>
-          {colsNumber === 2 && (
-            <>
-              <Label
-                size="medium"
-                style={{
-                  borderRadius: 0,
-                  color: "white",
-                  backgroundColor: "black",
-                  textAlign: "center",
-                  width: 220,
-                }}
-              >
-                Choose the color of the products
-              </Label>
-              <br />
-              <br />
+        </div>
+
+        {/* Color picker */}
+        {showPicker && (
+          <div className="border border-black/10 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                Choose product color
+              </div>
+
+              {currColor && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-600">Selected</span>
+                  <span
+                    className="h-5 w-5 rounded-full border border-black/20"
+                    style={{ backgroundColor: currColor }}
+                    title={currColor}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
               <SketchPicker
                 disableAlpha
                 color={currColor}
                 onChange={(color) => setCurrColor(color.hex)}
               />
-            </>
-          )}
-        </Grid.Column>
-      </Grid.Row>
-      <Grid.Row>
-        {currColor && (
-          <Button
-            onClick={addImageAndColorToArray}
-            content="Confirm"
-            size="big"
-            compact
-            style={{
-              borderRadius: 0,
-              backgroundColor: "Black",
-              color: "White",
-              width: 220,
-            }}
-          />
+            </div>
+          </div>
         )}
-      </Grid.Row>
-    </Grid>
+      </div>
+
+      {/* Confirm */}
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={addImageAndColorToArray}
+          disabled={!canConfirm}
+          className="bg-black text-white px-6 py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 disabled:opacity-40 transition"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
   );
 }

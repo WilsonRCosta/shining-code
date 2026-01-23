@@ -1,35 +1,38 @@
 const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const FILE_LIMIT = 1024 * 1024 * 15; // 15MB
-const FILES_DIR = "./public/images/";
-const allowedTypes = [
+const FILES_DIR = path.join(__dirname, "..", "public", "images");
+
+const allowedTypes = new Set([
   "image/png",
   "image/jpg",
   "image/gif",
   "image/jpeg",
   "image/webp",
-];
+]);
+
+fs.mkdirSync(FILES_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    //console.log(req, file);
-    callback(null, FILES_DIR); // TODO: use code to create the dirs
+  destination: (req, file, cb) => {
+    cb(null, FILES_DIR);
   },
-  filename: (req, file, callback) => {
-    callback(null, file.originalname);
+  filename: (req, file, cb) => {
+    const safeName = path.basename(file.originalname).replace(/\s+/g, "_");
+    cb(null, safeName);
   },
 });
 
 const uploadFile = multer({
-  storage: storage,
-  limits: FILE_LIMIT,
-  fileFilter: (req, file, callback) => {
-    if (allowedTypes.indexOf(file.mimetype) === -1)
-      return callback(
-        { msg: "File format not allowed: " + file.mimetype },
-        false
-      );
-    callback(null, true);
+  storage,
+  limits: { fileSize: FILE_LIMIT },
+  fileFilter: (req, file, cb) => {
+    if (!allowedTypes.has(file.mimetype)) {
+      return cb(new Error(`File format not allowed: ${file.mimetype}`), false);
+    }
+    cb(null, true);
   },
 });
 

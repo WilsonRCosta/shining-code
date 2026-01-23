@@ -1,35 +1,47 @@
 import React from "react";
-import { Breadcrumb } from "semantic-ui-react";
 import { Link } from "react-router-dom";
 
 export default function PathBreadcrumb({ activeType, genre, code }) {
+  const genreLabel = genre ? genre.charAt(0).toUpperCase() + genre.slice(1) : "Sales";
+
+  const activeTypeLabel = activeType
+    ? activeType.charAt(0).toUpperCase() + activeType.slice(1)
+    : null;
+
   return (
-    <Breadcrumb size="small" style={{ marginLeft: 20, float: "left" }}>
-      <Breadcrumb.Section as={Link} to="/">
-        Home
-      </Breadcrumb.Section>
-      <Breadcrumb.Divider />
-      {genre ? (
-        <Breadcrumb.Section active as={Link} to={`/clothes/${genre}`}>
-          {genre.charAt(0).toUpperCase() + genre.substring(1)}
-        </Breadcrumb.Section>
-      ) : (
-        <Breadcrumb.Section active as={Link} to="/clothes/sales">
-          Sales
-        </Breadcrumb.Section>
-      )}
-      {code && (
-        <>
-          <Breadcrumb.Divider />
-          <Breadcrumb.Section active>{code}</Breadcrumb.Section>
-        </>
-      )}
-      {activeType && (
-        <>
-          <Breadcrumb.Divider />
-          <Breadcrumb.Section active>{activeType.slice(0,1).toUpperCase() + activeType.substring(1)}</Breadcrumb.Section>
-        </>
-      )}
-    </Breadcrumb>
+    <nav className="px-4 py-3">
+      <ol className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase text-black/60">
+        <li>
+          <Link to="/" className="hover:text-black">
+            Home
+          </Link>
+        </li>
+
+        <li className="text-black/30">/</li>
+
+        <li>
+          <Link
+            to={genre ? `/clothes/${genre}` : "/clothes/sales"}
+            className="hover:text-black"
+          >
+            {genreLabel}
+          </Link>
+        </li>
+
+        {code && (
+          <>
+            <li className="text-black/30">/</li>
+            <li className="text-black">{code}</li>
+          </>
+        )}
+
+        {activeTypeLabel && (
+          <>
+            <li className="text-black/30">/</li>
+            <li className="text-black">{activeTypeLabel}</li>
+          </>
+        )}
+      </ol>
+    </nav>
   );
 }

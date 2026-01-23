@@ -6,38 +6,14 @@
     "version": "1.0"
   },
   "host": "localhost:8000",
-  "basePath": "/",
-  "schemes": [ "http" ],
+  "basePath": "/api",
+  "schemes": ["http"],
   "paths": {
     "/products": {
       "get": {
-        "description": "Obter todos os produtos",
-        "parameters": [
-          {
-            "name": "a",
-            "in": "path",
-            "description": "Primeiro número. Valor por omissão <code>10</code>.",
-            "required": true,
-            "default": "10",
-            "enum": [
-              "10"
-            ],
-            "type": "boolean"
-          },
-          {
-            "name": "b",
-            "in": "path",
-            "description": "Segundo número. Valor por omissão <code>15>/code>.",
-            "required": true,
-            "default": "15",
-            "enum": [
-              "15"
-            ],
-            "type": "array"
-          }
-        ],
+        "description": "Get all products",
         "responses": {
-
+          "200": {}
         }
       }
     }

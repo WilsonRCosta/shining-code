@@ -33,7 +33,7 @@ router.post("/", auth, async (req, res) => {
     .then((doc) =>
       res.status(201).json({
         msg: `${doc.name} - [${doc.code}] was created successfully.`,
-      }),
+      })
     )
     .catch((err) => {
       err.code === 11000
@@ -66,9 +66,8 @@ router.put("/:code/images", upload.array("files"), auth, async (req, res) => {
         }, 100 + offset);
         offset += 100;
         filesCtr--;
-        if (filesCtr === 0)
-          resolve(res.status(200).json({ msg: "All files uploaded" }));
-      }),
+        if (filesCtr === 0) resolve(res.status(200).json({ msg: "All files uploaded" }));
+      })
   );
 });
 
@@ -103,9 +102,7 @@ router.delete("/:code", auth, async (req, res) => {
     .then((err) => {
       err.deletedCount === 0
         ? res.status(404).json({ msg: `${req.params.code} does not exist.` })
-        : res
-            .status(200)
-            .json({ msg: `[${req.params.code}] was deleted successfully.` });
+        : res.status(200).json({ msg: `[${req.params.code}] was deleted successfully.` });
     })
     .catch((err) => res.status(500).json({ msg: err }));
 });

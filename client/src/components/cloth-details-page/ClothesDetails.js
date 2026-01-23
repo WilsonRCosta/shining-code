@@ -1,358 +1,414 @@
-import { useContext, useEffect, useState } from "react";
-import {
-  Grid,
-  Button,
-  Image,
-  Container,
-  Divider,
-  Label,
-} from "semantic-ui-react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import NavBar from "../navbar/NavBar";
+import NavBar from "../NavBar";
 import clothesService from "../../service/serviceAPI";
 import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
 import LoadingDimmer from "../LoadingDimmer";
 import { BagContext } from "../../contexts/BagContext";
 import colors from "ntcjs";
-
-import {
-  updateLocalCart,
-  updateLocalWishlist,
-} from "../../service/serviceLocalStorage";
+import { updateLocalCart, updateLocalWishlist } from "../../service/serviceLocalStorage";
 import { WishlistContext } from "../../contexts/WishlistContext";
 
 export default function ClothesDetails({ code }) {
-  const [cloth, setCloth] = useState([]);
+  const [cloth, setCloth] = useState(null);
 
-  const [fetchError, setFetchError] = useState();
-  const [fetchComplete, setFetchComplete] = useState();
+  const [fetchError, setFetchError] = useState(null);
+  const [fetchComplete, setFetchComplete] = useState(false);
 
-  const [size, setSize] = useState();
+  const [size, setSize] = useState("");
   const [quantity, setQuantity] = useState(1);
 
-  const [currImage, setCurrImage] = useState();
-  const [hasNextImage, setNextImage] = useState();
+  const [currImage, setCurrImage] = useState(null);
+  const [hasNextImage, setNextImage] = useState(false);
   const [hasPrevImage, setPrevImage] = useState(false);
 
   const { cart, setCart } = useContext(BagContext);
   const { wishlist, setWishlist } = useContext(WishlistContext);
 
-  const handleChangeCurrImageClickInColor = (clickedColor) => {
-    setCurrImage(cloth.images.find((i) => i.color === clickedColor));
-  };
+  const isWishlisted = useMemo(() => {
+    if (!cloth) return false;
+    return Array.isArray(wishlist) && wishlist.some((w) => w.code === cloth.code);
+  }, [wishlist, cloth]);
 
-  const handleChangeCurrImageClickInImage = (clickedImg) => {
-    setNextImage(
-      cloth.images.filter((img) => img.color === clickedImg.color).length > 1
-    );
-    setCurrImage(cloth.images.find((image) => image.data === clickedImg.data));
-  };
+  const priceNow = useMemo(() => {
+    if (!cloth) return 0;
+    const unit = cloth.discount ? cloth.salesPrice : cloth.price;
+    return Number(unit) * Number(quantity);
+  }, [cloth, quantity]);
 
-  const handleChangeCurrImageClickNextImage = () => {
-    let { imgsWithColor, currImgIdx } = findImageIndex();
-    setCurrImage(imgsWithColor[++currImgIdx]);
-    setPrevImage(true);
-    if (currImgIdx === imgsWithColor.length - 1) setNextImage(false);
-  };
-
-  const handleChangeCurrImageClickPrevImage = () => {
-    let { imgsWithColor, currImgIdx } = findImageIndex();
-    setCurrImage(imgsWithColor[--currImgIdx]);
-    setNextImage(true);
-    if (currImgIdx === 0) setPrevImage(false);
-  };
+  const imagesOfCurrentColor = useMemo(() => {
+    if (!cloth || !currImage) return [];
+    return cloth.images.filter((im) => im.color === currImage.color);
+  }, [cloth, currImage]);
 
   const findImageIndex = () => {
-    let imgsWithColor = cloth.images.filter(
-      (im) => im.color === currImage.color
-    );
-    let currImgIdx = imgsWithColor.findIndex((i) => i.name === currImage.name);
+    if (!currImage) return { imgsWithColor: [], currImgIdx: -1 };
+    const imgsWithColor = imagesOfCurrentColor;
+    const currImgIdx = imgsWithColor.findIndex((i) => i.name === currImage.name);
     return { imgsWithColor, currImgIdx };
   };
 
-  const handleSetQuantity = (value) => {
-    if (quantity + value > 0) setQuantity(quantity + value);
+  const handleChangeCurrImageClickInColor = (clickedColor) => {
+    if (!cloth?.images?.length) return;
+    const first = cloth.images.find((i) => i.color === clickedColor);
+    if (first) setCurrImage(first);
+  };
+
+  const handleChangeCurrImageClickInImage = (clickedImg) => {
+    if (!cloth?.images?.length) return;
+    setCurrImage(cloth.images.find((image) => image.data === clickedImg.data));
+    setNextImage(cloth.images.filter((img) => img.color === clickedImg.color).length > 1);
+  };
+
+  const handleChangeCurrImageClickNextImage = () => {
+    const { imgsWithColor, currImgIdx } = findImageIndex();
+    if (currImgIdx < 0) return;
+    const next = imgsWithColor[currImgIdx + 1];
+    if (next) setCurrImage(next);
+  };
+
+  const handleChangeCurrImageClickPrevImage = () => {
+    const { imgsWithColor, currImgIdx } = findImageIndex();
+    if (currImgIdx < 0) return;
+    const prev = imgsWithColor[currImgIdx - 1];
+    if (prev) setCurrImage(prev);
+  };
+
+  const handleSetQuantity = (delta) => {
+    setQuantity((q) => Math.max(1, q + delta));
   };
 
   const handleWishClick = () => {
-    let newWishlist = [...wishlist];
-    const objIdx = newWishlist.findIndex((w) => w.code === cloth.code);
-    objIdx > -1 ? newWishlist.splice(objIdx, 1) : newWishlist.push(cloth);
+    if (!cloth) return;
+    const newWishlist = [...wishlist];
+    const idx = newWishlist.findIndex((w) => w.code === cloth.code);
+    idx > -1 ? newWishlist.splice(idx, 1) : newWishlist.push(cloth);
     setWishlist(newWishlist);
     updateLocalWishlist(cloth);
   };
 
   const addToCart = () => {
+    if (!cloth) return;
     if (!size) {
       alert("Please select size");
       return;
     }
-    let product = cloth;
-    product.size = size;
-    product.quantity = quantity;
-    product.finalPrice = parseFloat(
-      cloth.discount ? quantity * cloth.salesPrice : quantity * cloth.price
-    ).toFixed(2);
+    const product = {
+      ...cloth,
+      size,
+      quantity,
+      finalPrice: Number(priceNow).toFixed(2),
+    };
+
     updateLocalCart(product);
     setCart([...cart, product]);
   };
 
   useEffect(() => {
     setFetchComplete(false);
+    setFetchError(null);
+
     clothesService()
       .getProductByCode(code)
       .then((resp) => {
         if (resp.type === "error") {
           setFetchError({ code: resp.code, msg: resp.msg });
+          setFetchComplete(true);
           return;
         }
+
         setCloth(resp.data);
-        if (resp.data.images) {
+
+        if (resp.data?.images?.length) {
           setCurrImage(resp.data.images[0]);
           setNextImage(
-            resp.data.images.filter(
-              (img) => img.color === resp.data.images[0].color
-            ).length > 1
+            resp.data.images.filter((img) => img.color === resp.data.images[0].color)
+              .length > 1
           );
         }
+
         setFetchComplete(true);
       });
   }, [code]);
 
   useEffect(() => {
-    if (currImage) {
-      let { imgsWithColor, currImgIdx } = findImageIndex();
-      setNextImage(currImgIdx < imgsWithColor.length - 1);
-      setPrevImage(currImgIdx > 0);
+    if (!currImage) return;
+    const { imgsWithColor, currImgIdx } = findImageIndex();
+    setNextImage(currImgIdx >= 0 && currImgIdx < imgsWithColor.length - 1);
+    setPrevImage(currImgIdx > 0);
+  }, [currImage]);
+
+  if (!fetchComplete) return <LoadingDimmer complete={false} error={null} />;
+  if (fetchError) return <LoadingDimmer complete={true} error={fetchError} />;
+  if (!cloth || !currImage) return null;
+
+  const colorName = (() => {
+    try {
+      return colors.name(currImage.color)?.[1]?.toUpperCase() || "COLOR";
+    } catch {
+      return "COLOR";
     }
-  }, [currImage, hasNextImage, hasPrevImage]);
+  })();
 
   return (
-    <div>
-      <br />
+    <div className="min-h-screen bg-white">
       <NavBar />
-      <br />
-      {fetchComplete ? (
-        <>
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-between gap-4">
           <PathBreadcrumb genre={cloth.genre} code={cloth.code} />
-          <br />
-          <br />
-          <Button
-            floated="left"
-            content="BACK"
-            icon="arrow left"
-            color="black"
-            style={{
-              background: "rgba(0, 0, 0, 0)",
-              color: "black",
-              marginLeft: 50,
-            }}
-            as={Link}
+
+          <Link
             to={`/clothes/${cloth.genre}`}
-          />
-          <br />
-          <br />
-          <br />
-          <Container>
-            <Grid>
-              <Grid.Column>
-                {cloth.images.map((image) => (
-                  <>
-                    <Grid.Row>
-                      <Image
-                        style={{ cursor: "pointer" }}
-                        src={`data:image/${currImage.type};base64,${image.data}`}
-                        onClick={() => handleChangeCurrImageClickInImage(image)}
-                      />
-                    </Grid.Row>
-                    <br />
-                  </>
-                ))}
-              </Grid.Column>
-              <Grid.Column width={8}>
-                <Image
-                  src={`data:image/${currImage.type};base64,${currImage.data}`}
-                />
-                {hasNextImage && (
-                  <Button
-                    style={{
-                      position: "absolute",
-                      top: "40%",
-                      left: "90%",
-                      transform: "translate(-50%, -50%)",
-                      msTransform: "translate(-50%, -50%)",
-                      color: "WhiteSmoke",
-                      backgroundColor: "grey",
-                      cursor: "pointer",
-                      border: "2px solid WhiteSmoke",
-                      borderRadius: 0,
-                    }}
-                    size="big"
-                    icon="arrow right"
-                    onClick={() => handleChangeCurrImageClickNextImage()}
+            className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-800 hover:underline"
+          >
+            ← Back
+          </Link>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Thumbs */}
+          <div className="lg:col-span-2 order-2 lg:order-1">
+            <div className="grid grid-cols-4 lg:grid-cols-1 gap-3">
+              {cloth.images.map((image) => (
+                <button
+                  key={image.name}
+                  type="button"
+                  onClick={() => handleChangeCurrImageClickInImage(image)}
+                  className="group block border border-black/10 hover:border-black/30 transition"
+                  aria-label={`Select image ${image.name}`}
+                >
+                  <img
+                    className="aspect-[3/4] w-full object-cover"
+                    src={`data:image/${image.type};base64,${image.data}`}
+                    alt={cloth.name}
                   />
-                )}
-                {hasPrevImage && (
-                  <Button
-                    style={{
-                      position: "absolute",
-                      top: "40%",
-                      left: "10%",
-                      transform: "translate(-50%, -50%)",
-                      msTransform: "translate(-50%, -50%)",
-                      color: "WhiteSmoke",
-                      backgroundColor: "grey",
-                      cursor: "pointer",
-                      border: "2px solid WhiteSmoke",
-                      borderRadius: 0,
-                    }}
-                    size="big"
-                    icon="arrow left"
-                    onClick={() => handleChangeCurrImageClickPrevImage()}
-                  />
-                )}
-              </Grid.Column>
-              <Grid.Column width={7}>
-                <Grid.Row>
-                  <h1>{cloth.name}</h1>
-                </Grid.Row>
-                <Grid.Row style={{ marginRight: 70 }}>
-                  <Button
-                    icon={
-                      wishlist && wishlist.find((w) => w.code === code)
-                        ? "heart"
-                        : "heart outline"
-                    }
-                    style={{
-                      background: "rgba(0, 0, 0, 0)",
-                      color: "Red",
-                    }}
-                    onClick={() => handleWishClick()}
-                    floated="left"
-                    size="massive"
-                  />
-                  {cloth.brand}
-                </Grid.Row>
-                <Grid.Row style={{ marginRight: 70, color: "grey" }}>
-                  Code: {cloth.code}
-                </Grid.Row>
-                <br />
-                <Divider />
-                <Grid.Row>
-                  <strong>SIZE</strong>
-                  <br />
-                  <br />
-                </Grid.Row>
-                <Grid.Row>
-                  <Button.Group
-                    compact
-                    color="gray"
-                    size="big"
-                    buttons={["XS", "S", "M", "L", "XL"]}
-                    onClick={(e) => setSize(e.target.innerText)}
-                  />
-                </Grid.Row>
-                <br />
-                <Divider />
-                <strong>QUANTITY</strong>
-                <br />
-                <br />
-                <Button
-                  style={{
-                    borderRadius: 0,
-                    backgroundColor: "Grey",
-                    color: "WhiteSmoke",
-                    verticalAlign: "middle",
-                  }}
-                  icon="arrow left"
-                  onClick={() => handleSetQuantity(-1)}
-                />
-                <Label
-                  style={{
-                    verticalAlign: "middle",
-                    borderRadius: 0,
-                    color: "black",
-                  }}
-                  size="big"
-                  content={quantity}
-                />
-                <Button
-                  style={{
-                    borderRadius: 0,
-                    backgroundColor: "Grey",
-                    color: "WhiteSmoke",
-                    verticalAlign: "middle",
-                  }}
-                  icon="arrow right"
-                  onClick={() => handleSetQuantity(1)}
-                />
-                <Divider />
-                <Grid.Row style={{ marginLeft: 140, float: "left" }}>
-                  <h3>{colors.name(currImage.color)[1].toUpperCase()}</h3>
-                </Grid.Row>
-                <br />
-                <br />
-                <Grid.Row style={{ marginLeft: 140, float: "left" }}>
-                  {cloth.colors.map((c) => (
-                    <Button
-                      circular
-                      size="medium"
-                      icon
-                      style={{
-                        backgroundColor: c,
-                        border: "1px solid #777777",
-                      }}
-                      onClick={() => handleChangeCurrImageClickInColor(c)}
-                    ></Button>
-                  ))}
-                </Grid.Row>
-                <br />
-                <br />
-                <br />
-                <Grid.Row>
-                  {cloth.discount ? (
-                    <Grid centered rows={2}>
-                      <Grid.Row
-                        style={{
-                          textDecorationLine: "line-through",
-                          textDecorationColor: "red",
-                        }}
-                      >
-                        <h4>{cloth.price.toFixed(2)}€</h4>
-                      </Grid.Row>
-                      <Grid.Row>
-                        <h2>{(quantity * cloth.salesPrice).toFixed(2)}€</h2>
-                      </Grid.Row>
-                    </Grid>
-                  ) : (
-                    <Grid.Row>
-                      <h2>{(quantity * cloth.price).toFixed(2)}€</h2>
-                    </Grid.Row>
-                  )}
-                </Grid.Row>
-                <br />
-                <Grid.Row>
-                  <Button
-                    style={{
-                      backgroundColor: "black",
-                      fontRadius: 1,
-                      color: "WhiteSmoke",
-                      border: "2px solid black",
-                      borderRadius: 0,
-                    }}
-                    icon="cart"
-                    size="huge"
-                    content="Add to Cart"
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main image */}
+          <div className="lg:col-span-7 order-1 lg:order-2">
+            <div className="relative border border-black/10 bg-white">
+              <img
+                className="w-full object-cover aspect-[3/4]"
+                src={`data:image/${currImage.type};base64,${currImage.data}`}
+                alt={cloth.name}
+              />
+
+              {hasPrevImage && (
+                <button
+                  type="button"
+                  onClick={handleChangeCurrImageClickPrevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-black/10 hover:border-black/30 hover:bg-white transition flex items-center justify-center"
+                  aria-label="Previous image"
+                >
+                  ‹
+                </button>
+              )}
+
+              {hasNextImage && (
+                <button
+                  type="button"
+                  onClick={handleChangeCurrImageClickNextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-black/10 hover:border-black/30 hover:bg-white transition flex items-center justify-center"
+                  aria-label="Next image"
+                >
+                  ›
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="lg:col-span-3 order-3">
+            <div className="lg:sticky lg:top-6">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <h1 className="text-lg font-semibold text-neutral-900">{cloth.name}</h1>
+                  <button
+                    type="button"
+                    onClick={handleWishClick}
+                    className="h-9 w-9 border border-black/10 hover:border-black/30 transition flex items-center justify-center"
+                    aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                    title={isWishlisted ? "Wishlisted" : "Add to wishlist"}
+                  >
+                    <span className={isWishlisted ? "text-red-600" : "text-neutral-700"}>
+                      {isWishlisted ? "♥" : "♡"}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="text-xs text-neutral-600">
+                  <div className="font-medium text-neutral-900">{cloth.brand}</div>
+                  <div className="mt-1">
+                    Code: <span className="font-mono">{cloth.code}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-black/10 pt-4">
+                  {/* Price */}
+                  <div className="flex items-baseline gap-3">
+                    {cloth.discount ? (
+                      <>
+                        <div className="text-xl font-semibold text-neutral-900">
+                          {Number(priceNow).toFixed(2)}€
+                        </div>
+                        <div className="text-sm text-neutral-500 line-through">
+                          {(Number(quantity) * Number(cloth.price)).toFixed(2)}€
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-xl font-semibold text-neutral-900">
+                        {Number(priceNow).toFixed(2)}€
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Size */}
+                <div className="border-t border-black/10 pt-4">
+                  <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-700">
+                    Size
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-5 gap-2">
+                    {["XS", "S", "M", "L", "XL"].map((s) => {
+                      const active = size === s;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSize(s)}
+                          className={[
+                            "h-10 text-xs font-semibold",
+                            "border transition",
+                            active
+                              ? "border-black bg-black text-white"
+                              : "border-black/20 hover:border-black/50",
+                          ].join(" ")}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Quantity */}
+                <div className="border-t border-black/10 pt-4">
+                  <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-700">
+                    Quantity
+                  </div>
+
+                  <div className="mt-3 inline-flex items-center border border-black/20">
+                    <button
+                      type="button"
+                      onClick={() => handleSetQuantity(-1)}
+                      className="h-10 w-10 hover:bg-black hover:text-white transition"
+                      aria-label="Decrease quantity"
+                    >
+                      –
+                    </button>
+                    <div className="h-10 w-12 flex items-center justify-center text-sm font-semibold">
+                      {quantity}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSetQuantity(1)}
+                      className="h-10 w-10 hover:bg-black hover:text-white transition"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Color */}
+                <div className="border-t border-black/10 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-700">
+                      Color
+                    </div>
+                    <div className="text-xs text-neutral-500">{colorName}</div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {cloth.colors.map((c) => {
+                      const active = currImage?.color === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => handleChangeCurrImageClickInColor(c)}
+                          className={[
+                            "h-6 w-6 rounded-full border transition",
+                            active
+                              ? "border-black"
+                              : "border-black/20 hover:border-black/60",
+                          ].join(" ")}
+                          style={{ backgroundColor: c }}
+                          title={c}
+                          aria-label={`Select color ${c}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Add to cart */}
+                <div className="pt-2">
+                  <button
+                    type="button"
                     onClick={addToCart}
+                    className="w-full h-12 bg-black text-white text-[12px] font-extrabold tracking-[0.22em] uppercase hover:bg-neutral-800 transition"
+                  >
+                    Add to cart
+                  </button>
+                  {!size && (
+                    <div className="mt-2 text-xs text-neutral-500">
+                      Select a size to add to cart.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* optional: “more images in same color” row */}
+        {imagesOfCurrentColor.length > 1 && (
+          <div className="mt-10 border-t border-black/10 pt-6">
+            <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-700">
+              More in this color
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              {imagesOfCurrentColor.map((im) => (
+                <button
+                  key={im.name}
+                  type="button"
+                  onClick={() => setCurrImage(im)}
+                  className={[
+                    "border transition",
+                    im.name === currImage.name
+                      ? "border-black"
+                      : "border-black/10 hover:border-black/30",
+                  ].join(" ")}
+                  aria-label={`Select image ${im.name}`}
+                >
+                  <img
+                    className="aspect-[3/4] w-full object-cover"
+                    src={`data:image/${im.type};base64,${im.data}`}
+                    alt={cloth.name}
                   />
-                </Grid.Row>
-              </Grid.Column>
-            </Grid>
-          </Container>
-        </>
-      ) : (
-        <LoadingDimmer complete={fetchComplete} error={fetchError} />
-      )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

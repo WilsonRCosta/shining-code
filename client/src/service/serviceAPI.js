@@ -10,10 +10,7 @@ export default function clothesService() {
       return axios.get(PRODUCTS_URL).then(getProductsInfo).catch(getError);
     },
     getProductByCode: (code) => {
-      return axios
-        .get(`${PRODUCTS_URL}/${code}`)
-        .then(getProductsInfo)
-        .catch(getError);
+      return axios.get(`${PRODUCTS_URL}/${code}`).then(getProductsInfo).catch(getError);
     },
     createProduct: (product, token) => {
       const { files, ...rest } = product; // remove files
@@ -47,16 +44,10 @@ export default function clothesService() {
 
     // AUTHENTICATION REQUESTS
     loginUser: (user) => {
-      return axios
-        .post(`${USERS_URL}/login`, user)
-        .then(getUserInfo)
-        .catch(getError);
+      return axios.post(`${USERS_URL}/login`, user).then(getUserInfo).catch(getError);
     },
     registerUser: (user) => {
-      return axios
-        .post(`${USERS_URL}/register`, user)
-        .then(getUserInfo)
-        .catch(getError);
+      return axios.post(`${USERS_URL}/register`, user).then(getUserInfo).catch(getError);
     },
   };
 }

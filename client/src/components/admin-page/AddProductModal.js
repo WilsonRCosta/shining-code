@@ -1,306 +1,398 @@
-import React, { useEffect, useState, useContext } from "react";
-import { Modal, Button, Form } from "semantic-ui-react";
+import React, { useMemo, useState, useContext } from "react";
+import { useSnackbar } from "notistack";
 import clothesService from "../../service/serviceAPI";
 import ImageAndColorGrid from "./ImageAndColorGrid";
 import { UserContext } from "../../contexts/UserContext";
-import { useSnackbar } from "notistack";
 
 export default function AddProductModal({ clothes, setClothes }) {
   const { enqueueSnackbar } = useSnackbar();
-  const emptyProduct = {
-    code: "",
-    name: "",
-    brand: "",
-    genre: "",
-    type: "",
-    price: 0,
-    path: "",
-    discount: 0,
-    salesPrice: 0,
-    images: [], // needs to be separated from files
-    colors: [],
-    files: [],
-  };
+
+  const emptyProduct = useMemo(
+    () => ({
+      code: "",
+      name: "",
+      brand: "",
+      genre: "",
+      type: "",
+      price: "",
+      discount: 0,
+      salesPrice: "0.00",
+      images: [],
+      colors: [],
+      files: [],
+    }),
+    []
+  );
+
   const [product, setProduct] = useState(emptyProduct);
   const { tokenProvider } = useContext(UserContext);
-  const [token, setToken] = tokenProvider;
+  const [token] = tokenProvider;
 
   const [open, setOpen] = useState(false);
-  const [discountButton, setDiscountButton] = useState(false);
+  const [discountOpen, setDiscountOpen] = useState(false);
   const [activeImageAndColor, setActiveImageAndColor] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const changeProduct = (e) =>
-    setProduct({ ...product, [e.target.name]: e.target.value });
+  const canCreate =
+    product.name &&
+    product.type &&
+    product.brand &&
+    product.genre &&
+    product.price !== "" &&
+    !Number.isNaN(Number(product.price)) &&
+    Array.isArray(product.files) &&
+    product.files.length > 0 &&
+    !submitting;
 
-  const checkIfNum = (e) => {
-    if (isNaN(e.target.value.toString())) {
-      setProduct({ ...product, [e.target.name]: undefined });
-    } else changeProduct(e);
+  const closeAndReset = () => {
+    setOpen(false);
+    setDiscountOpen(false);
+    setActiveImageAndColor(false);
+    setSubmitting(false);
+    setProduct(emptyProduct);
   };
 
-  useEffect(() => {
-    if (product.code) {
-      clothesService()
-        .createProduct(product, token)
-        .then((resp) => {
-          enqueueSnackbar(resp.msg, { variant: resp.type });
-          if (product.files) addImagesToProduct();
-          setProduct(emptyProduct);
-        });
-    }
-  }, [product.code]);
+  const changeProduct = (e) => {
+    const { name, value } = e.target;
+    setProduct((p) => ({ ...p, [name]: value }));
+  };
 
-  const addImagesToProduct = () => {
-    clothesService()
-      .addImageToProduct(product.files, product.code, token)
-      .then((resp) => {
-        if (resp.type == "error") {
-          enqueueSnackbar(resp.msg, { variant: resp.type });
-          return;
-        }
-        setOpen(false);
-        setClothes([...clothes, product]);
-      });
+  const setSelect = (name, value) => {
+    setProduct((p) => ({ ...p, [name]: value }));
+  };
+
+  const onPriceChange = (e) => {
+    const value = e.target.value;
+    // allow empty during typing
+    if (value === "") return setProduct((p) => ({ ...p, price: "" }));
+    if (Number.isNaN(Number(value))) return;
+    setProduct((p) => ({ ...p, price: value }));
   };
 
   const generateNumber = () => {
-    const random = Math.floor(Math.random() * Math.floor(999));
-    let num = random + "";
-    while (num.length < 3) {
-      num = "0" + num;
-    }
-    return num;
+    const random = Math.floor(Math.random() * 999);
+    return String(random).padStart(3, "0");
   };
 
-  const generateCode = () => {
-    const codeGenre = product.genre.charAt(0).toUpperCase();
-    const type = product.type.replace("-", "").substring(0, 2);
-    let codeBlock = codeGenre.concat(type.toUpperCase()).concat("-");
-    let random = generateNumber();
-    let code = codeBlock.concat(random);
+  const buildCodeBlock = () => {
+    const codeGenre = product.genre?.charAt(0)?.toUpperCase() || "X";
+    const type2 = (product.type || "").replace("-", "").substring(0, 2).toUpperCase();
+    return `${codeGenre}${type2}-`;
+  };
 
-    let existingCodes = [];
-    clothesService()
-      .getProducts()
-      .then((resp) => {
-        if (resp.type == "error") {
-          enqueueSnackbar(resp.msg, { variant: resp.type });
+  const changeDiscount = (value) => {
+    const discount = Number(value);
+    const price = Number(product.price || 0);
+    const salesPrice = (price * (1 - discount / 100)).toFixed(2);
+
+    setProduct((p) => ({
+      ...p,
+      discount,
+      salesPrice,
+    }));
+  };
+
+  const generateUniqueCode = async () => {
+    const resp = await clothesService().getProducts();
+    if (resp.type === "error") throw new Error(resp.msg || "Failed to get products");
+
+    const existing = new Set(resp.data.map((p) => p.code));
+    const codeBlock = buildCodeBlock();
+
+    let code = codeBlock + generateNumber();
+    while (existing.has(code)) code = codeBlock + generateNumber();
+
+    return code;
+  };
+
+  const createProductFlow = async () => {
+    try {
+      setSubmitting(true);
+
+      const code = await generateUniqueCode();
+
+      const payload = {
+        ...product,
+        code,
+        price: Number(product.price),
+        salesPrice: product.discount ? Number(product.salesPrice) : 0,
+      };
+
+      const createResp = await clothesService().createProduct(payload, token);
+      enqueueSnackbar(createResp.msg, { variant: createResp.type });
+
+      if (createResp.type === "error") {
+        setSubmitting(false);
+        return;
+      }
+
+      // Upload images
+      if (payload.files?.length) {
+        const imgResp = await clothesService().addImageToProduct(
+          payload.files,
+          code,
+          token
+        );
+
+        if (imgResp.type === "error") {
+          enqueueSnackbar(imgResp.msg, { variant: "error" });
+          setSubmitting(false);
           return;
         }
-        resp.data.forEach((dataProd) => existingCodes.push(dataProd.code));
-        while (existingCodes.findIndex((elem) => elem === code) !== -1) {
-          random = random = generateNumber();
-          code = codeBlock.concat(random);
-        }
-        setProduct({ ...product, code });
-      });
-  };
+      }
 
-  const changeDiscountAndPrice = (e) => {
-    setProduct({
-      ...product,
-      [e.target.name]: e.target.value,
-      salesPrice: (Number(product.price) * (1 - e.target.value / 100)).toFixed(
-        2
-      ),
-    });
+      // Update list optimistically
+      setClothes([...clothes, payload]);
+
+      enqueueSnackbar("Product created!", { variant: "success" });
+      closeAndReset();
+    } catch (err) {
+      enqueueSnackbar(err?.message || "Something went wrong", { variant: "error" });
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Modal
-      style={{ borderRadius: 0 }}
-      closeIcon
-      onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
-      open={open}
-      trigger={
-        <Button
-          content="Add New Product"
-          size="big"
-          style={{
-            borderRadius: 0,
-            float: "center",
-            color: "White",
-            backgroundColor: "Black",
-            opacity: 0.9,
-          }}
-        />
-      }
-    >
-      <Modal.Header style={{ backgroundColor: "#ddd" }}>
+    <>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="bg-black text-white px-6 py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 transition"
+      >
         Add New Product
-        {product.colors.map((c, idx) => (
-          <Button
-            key={`${idx}-${c}`}
-            circular
-            size="medium"
-            icon
-            style={{
-              float: "right",
-              backgroundColor: c,
-              border: "1px solid #777777",
-            }}
+      </button>
+
+      {/* Modal */}
+      {open && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <button
+            type="button"
+            onClick={closeAndReset}
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close modal"
           />
-        ))}
-      </Modal.Header>
-      <Modal.Content style={{ backgroundColor: "#eee" }}>
-        <Form>
-          <Form.Group widths="equal">
-            <Form.Input
-              required
-              fluid
-              name="name"
-              label="Name"
-              placeholder="Name"
-              onChange={changeProduct}
-              maxLength={30}
-            />
-          </Form.Group>
-        </Form>
-        <Form>
-          <Form.Group widths="equal">
-            <Form.Select
-              required
-              fluid
-              label="Genre"
-              name="genre"
-              placeholder="Genre"
-              options={[
-                { key: "m", text: "Men", value: "men" },
-                { key: "w", text: "Women", value: "women" },
-                { key: "c", text: "Children", value: "children" },
-              ]}
-              onChange={(e, { value }) =>
-                setProduct({ ...product, genre: value })
-              }
-            />
-            <Form.Input
-              required
-              fluid
-              name="brand"
-              label="Brand"
-              placeholder="Brand"
-              onChange={changeProduct}
-              maxLength={15}
-            />
-            <Form.Select
-              required
-              label="Type"
-              placeholder="Type"
-              name="type"
-              options={[
-                { key: "AC", text: "Accessory", value: "accessories" },
-                { key: "JK", text: "Jacket", value: "jackets" },
-                { key: "JE", text: "Jeans", value: "jeans" },
-                { key: "ST", text: "Shirt", value: "shirts" },
-                { key: "SH", text: "Shoes", value: "shoes" },
-                { key: "TS", text: "T-Shirt", value: "t-shirt" },
-                { key: "UW", text: "Underwear", value: "underwear" },
-              ]}
-              onChange={(e, { value }) =>
-                setProduct({ ...product, type: value })
-              }
-            />
-            <Form.Input
-              error={
-                product.price == undefined
-                  ? { content: "Field is not numeric" }
-                  : null
-              }
-              fluid
-              required
-              name="price"
-              label="Price (€)"
-              placeholder="Price (€)"
-              onChange={checkIfNum}
-            />
-          </Form.Group>
-        </Form>
-        <Button
-          style={{ borderRadius: 0, color: "White", backgroundColor: "Black" }}
-          compact
-          content="Set Discount"
-          disabled={!product.price}
-          onClick={() => {
-            setDiscountButton(!discountButton);
-            setProduct({ ...product, salesPrice: 0, discount: 0 });
-          }}
-        />
-        <Button
-          content="Add new Image"
-          compact
-          style={{ backgroundColor: "Black", color: "White", borderRadius: 0 }}
-          onClick={() => {
-            setActiveImageAndColor(!activeImageAndColor);
-          }}
-        />
-        {product.colors.length > 0 && (
-          <Button
-            floated="right"
-            content="Reset Images"
-            compact
-            style={{
-              backgroundColor: "Black",
-              color: "White",
-              borderRadius: 0,
-            }}
-            onClick={() => {
-              setProduct({ ...product, images: [], colors: [], files: [] });
-            }}
-          />
-        )}
-        <br />
-        <br />
-        {discountButton && (
-          <>
-            <Form>
-              <Form.Group widths="equal">
-                <Form.Input
-                  label={`Discount: ${product.discount}%`}
-                  min={0}
-                  max={100}
-                  name="discount"
-                  onChange={changeDiscountAndPrice}
-                  step={5}
-                  type="range"
-                  value={product.discount}
-                />
-                <Form.Input
-                  label="Sales Price"
-                  value={`${product.salesPrice}`}
-                  readOnly
-                />
-              </Form.Group>
-            </Form>
-          </>
-        )}
-        {activeImageAndColor && (
-          <ImageAndColorGrid
-            product={product}
-            setProduct={setProduct}
-            activeImageAndColor={activeImageAndColor}
-            setActiveImageAndColor={setActiveImageAndColor}
-          />
-        )}
-      </Modal.Content>
-      <Modal.Actions style={{ backgroundColor: "#ddd" }}>
-        <Button
-          disabled={
-            !product.name ||
-            !product.type ||
-            !product.brand ||
-            !product.price ||
-            !product.genre ||
-            product.files.length === 0
-          }
-          onClick={() => {
-            setOpen(false);
-            generateCode();
-          }}
-          content="Create Product"
-          style={{ borderRadius: 0, color: "White", backgroundColor: "Black" }}
-        />
-      </Modal.Actions>
-    </Modal>
+
+          {/* Panel */}
+          <div className="relative mx-auto mt-10 w-[92%] max-w-4xl bg-white border border-black/10 shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
+              <div>
+                <h2 className="text-sm font-semibold tracking-[0.18em] uppercase text-black">
+                  Add New Product
+                </h2>
+                {product.colors?.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {product.colors.map((c) => (
+                      <span
+                        key={c}
+                        className="h-5 w-5 rounded-full border border-black/20"
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={closeAndReset}
+                className="px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-600 hover:text-black"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Name */}
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                    Name
+                  </label>
+                  <input
+                    name="name"
+                    maxLength={30}
+                    value={product.name}
+                    onChange={changeProduct}
+                    placeholder="Name"
+                    className="mt-2 w-full border border-black/15 px-3 py-2 text-sm outline-none focus:border-black"
+                  />
+                </div>
+
+                {/* Genre */}
+                <div>
+                  <label className="block text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                    Genre
+                  </label>
+                  <select
+                    value={product.genre}
+                    onChange={(e) => setSelect("genre", e.target.value)}
+                    className="mt-2 w-full border border-black/15 px-3 py-2 text-sm bg-white outline-none focus:border-black"
+                  >
+                    <option value="" disabled>
+                      Select genre
+                    </option>
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                    <option value="children">Children</option>
+                  </select>
+                </div>
+
+                {/* Brand */}
+                <div>
+                  <label className="block text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                    Brand
+                  </label>
+                  <input
+                    name="brand"
+                    maxLength={15}
+                    value={product.brand}
+                    onChange={changeProduct}
+                    placeholder="Brand"
+                    className="mt-2 w-full border border-black/15 px-3 py-2 text-sm outline-none focus:border-black"
+                  />
+                </div>
+
+                {/* Type */}
+                <div>
+                  <label className="block text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                    Type
+                  </label>
+                  <select
+                    value={product.type}
+                    onChange={(e) => setSelect("type", e.target.value)}
+                    className="mt-2 w-full border border-black/15 px-3 py-2 text-sm bg-white outline-none focus:border-black"
+                  >
+                    <option value="" disabled>
+                      Select type
+                    </option>
+                    <option value="accessories">Accessory</option>
+                    <option value="jackets">Jacket</option>
+                    <option value="jeans">Jeans</option>
+                    <option value="shirts">Shirt</option>
+                    <option value="shoes">Shoes</option>
+                    <option value="t-shirt">T-Shirt</option>
+                    <option value="underwear">Underwear</option>
+                  </select>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="block text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                    Price (€)
+                  </label>
+                  <input
+                    name="price"
+                    inputMode="decimal"
+                    value={product.price}
+                    onChange={onPriceChange}
+                    placeholder="0.00"
+                    className="mt-2 w-full border border-black/15 px-3 py-2 text-sm outline-none focus:border-black"
+                  />
+                  {product.price !== "" && Number.isNaN(Number(product.price)) && (
+                    <p className="mt-2 text-xs text-red-600">Price must be numeric</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions row */}
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={!product.price || Number.isNaN(Number(product.price))}
+                  onClick={() => {
+                    setDiscountOpen((v) => !v);
+                    setProduct((p) => ({ ...p, discount: 0, salesPrice: "0.00" }));
+                  }}
+                  className="border border-black/15 px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase hover:border-black disabled:opacity-40"
+                >
+                  Set discount
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveImageAndColor((v) => !v)}
+                  className="border border-black/15 px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase hover:border-black"
+                >
+                  Add new image
+                </button>
+
+                {product.colors?.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProduct((p) => ({ ...p, images: [], colors: [], files: [] }))
+                    }
+                    className="ml-auto border border-black/15 px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase hover:border-black"
+                  >
+                    Reset images
+                  </button>
+                )}
+              </div>
+
+              {/* Discount section */}
+              {discountOpen && (
+                <div className="mt-6 border-t border-black/10 pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
+                      Discount: {product.discount}%
+                    </div>
+                    <div className="text-sm font-semibold text-black">
+                      Sales price: {product.salesPrice}€
+                    </div>
+                  </div>
+
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={product.discount}
+                    onChange={(e) => changeDiscount(e.target.value)}
+                    className="mt-4 w-full"
+                  />
+                </div>
+              )}
+
+              {/* Image grid */}
+              {activeImageAndColor && (
+                <div className="mt-6 border-t border-black/10 pt-6">
+                  <ImageAndColorGrid
+                    product={product}
+                    setProduct={setProduct}
+                    activeImageAndColor={activeImageAndColor}
+                    setActiveImageAndColor={setActiveImageAndColor}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-black/10">
+              <button
+                type="button"
+                onClick={closeAndReset}
+                className="px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-600 hover:text-black"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={!canCreate}
+                onClick={createProductFlow}
+                className="bg-black text-white px-6 py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 disabled:opacity-40 transition"
+              >
+                {submitting ? "Creating..." : "Create product"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

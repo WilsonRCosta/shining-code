@@ -457,7 +457,6 @@ export default function EditProductModal({ product, clothes, setClothes }) {
               {activeImageAndColor && (
                 <div className="mt-8">
                   <ImageAndColorGrid
-                    product={newProduct}
                     setProduct={setNewProduct}
                     activeImageAndColor={activeImageAndColor}
                     setActiveImageAndColor={setActiveImageAndColor}

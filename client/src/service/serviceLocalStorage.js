@@ -1,3 +1,4 @@
+const authKey = "AUTH";
 const shoppingCartKey = "SHOPPING-CART";
 const wishlistKey = "WISHLIST";
 
@@ -46,4 +47,22 @@ export const deleteFromLocalStorage = (src, code) => {
   const localItemIdx = localCart.findIndex((i) => i.code === code);
   localCart.splice(localItemIdx, 1);
   localStorage.setItem(key, JSON.stringify(localCart));
+};
+
+export const setUserInfo = (user, token) => {
+  localStorage.setItem(authKey, JSON.stringify({ user, token }));
+};
+
+export const getUserInfo = () => {
+  try {
+    const raw = localStorage.getItem(authKey);
+    return raw ? JSON.parse(raw) : { user: "", token: "" };
+  } catch {
+    return { user: "", token: "" };
+  }
+};
+export const deleteUser = () => {
+  try {
+    localStorage.removeItem(authKey);
+  } catch {}
 };

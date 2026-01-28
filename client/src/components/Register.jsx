@@ -9,13 +9,15 @@ export default function Register() {
   const { enqueueSnackbar } = useSnackbar();
   const history = useNavigate();
 
-  // false = login, true = signup
   const [registryType, toggleRegistry] = useState(false);
 
-  const [email, setEmail] = useState("");
-  const [name, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [repeat_password, setRepeatPass] = useState("");
+  const [loginName, setLoginName] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupRepeatPassword, setSignupRepeatPassword] = useState("");
 
   const { userProvider, tokenProvider } = useContext(UserContext);
   const [, setUser] = userProvider;
@@ -27,7 +29,6 @@ export default function Register() {
   );
 
   const setUserInfo = (resp) => {
-    // resp might be weird sometimes; normalize message
     const msg =
       typeof resp?.msg === "string"
         ? resp.msg
@@ -37,7 +38,6 @@ export default function Register() {
 
     enqueueSnackbar(msg, { variant: resp?.type || "default" });
 
-    // Only set user/token if server sends them
     if (resp?.user) setUser(resp.user);
     if (resp?.token) setToken(resp.token);
 
@@ -46,14 +46,35 @@ export default function Register() {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    clothesService().loginUser({ name, password }).then(setUserInfo);
+    clothesService()
+      .loginUser({ name: loginName, password: loginPassword })
+      .then(setUserInfo);
   };
 
   const handleSignupSubmit = (e) => {
     e.preventDefault();
     clothesService()
-      .registerUser({ email, name, password, repeat_password })
+      .registerUser({
+        email: signupEmail,
+        name: signupName,
+        password: signupPassword,
+        repeat_password: signupRepeatPassword,
+      })
       .then(setUserInfo);
+  };
+
+  const switchToLogin = () => {
+    toggleRegistry(false);
+    setSignupEmail("");
+    setSignupName("");
+    setSignupPassword("");
+    setSignupRepeatPassword("");
+  };
+
+  const switchToSignup = () => {
+    toggleRegistry(true);
+    setLoginName("");
+    setLoginPassword("");
   };
 
   return (
@@ -76,22 +97,22 @@ export default function Register() {
         <div className="flex items-center gap-2 border-b border-black/10 pb-3">
           <button
             type="button"
-            onClick={() => toggleRegistry(false)}
+            onClick={switchToLogin}
             className={`text-xs font-semibold tracking-[0.18em] uppercase px-2 py-1 ${
               !registryType ? "text-black" : "text-neutral-400 hover:text-black"
             }`}
           >
-            Sign in
+            Login
           </button>
           <span className="text-neutral-300">/</span>
           <button
             type="button"
-            onClick={() => toggleRegistry(true)}
+            onClick={switchToSignup}
             className={`text-xs font-semibold tracking-[0.18em] uppercase px-2 py-1 ${
               registryType ? "text-black" : "text-neutral-400 hover:text-black"
             }`}
           >
-            Create account
+            Sign Up
           </button>
         </div>
 
@@ -105,8 +126,8 @@ export default function Register() {
             <form onSubmit={handleLoginSubmit} className="mt-5 space-y-5">
               <Field label="Username">
                 <input
-                  value={name}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={loginName}
+                  onChange={(e) => setLoginName(e.target.value)}
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="YOUR USERNAME"
                 />
@@ -114,8 +135,8 @@ export default function Register() {
 
               <Field label="Password">
                 <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
                   type="password"
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="YOUR PASSWORD"
@@ -152,8 +173,8 @@ export default function Register() {
             <form onSubmit={handleSignupSubmit} className="mt-5 space-y-5">
               <Field label="Email">
                 <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={signupEmail}
+                  onChange={(e) => setSignupEmail(e.target.value)}
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="YOU@EMAIL.COM"
                 />
@@ -161,8 +182,8 @@ export default function Register() {
 
               <Field label="Username">
                 <input
-                  value={name}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={signupName}
+                  onChange={(e) => setSignupName(e.target.value)}
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="CHOOSE A USERNAME"
                 />
@@ -170,8 +191,8 @@ export default function Register() {
 
               <Field label="Password">
                 <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
                   type="password"
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="CREATE A PASSWORD"
@@ -180,8 +201,8 @@ export default function Register() {
 
               <Field label="Repeat password">
                 <input
-                  value={repeat_password}
-                  onChange={(e) => setRepeatPass(e.target.value)}
+                  value={signupRepeatPassword}
+                  onChange={(e) => setSignupRepeatPassword(e.target.value)}
                   type="password"
                   className="w-full border-b border-black/20 focus:border-black outline-none py-3 text-sm"
                   placeholder="REPEAT PASSWORD"

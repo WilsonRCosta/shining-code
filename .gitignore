@@ -4,6 +4,12 @@ node_modules/
 public/images/*
 .env
 
+# testing
+coverage/
+
+# production
+dist/
+
 # misc
 .DS_Store
 .env.local

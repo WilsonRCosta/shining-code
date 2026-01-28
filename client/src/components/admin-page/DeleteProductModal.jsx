@@ -3,6 +3,7 @@ import clothesService from "../../service/serviceAPI";
 import { UserContext } from "../../contexts/UserContext";
 import { useSnackbar } from "notistack";
 import { FaTrash } from "react-icons/fa";
+import { notify } from "../../utils/notify";
 
 export default function DeleteProductModal({ clothes, setClothes, product }) {
   const [open, setOpen] = useState(false);
@@ -19,7 +20,7 @@ export default function DeleteProductModal({ clothes, setClothes, product }) {
 
       const res = await clothesService().deleteProduct(product.code, token);
 
-      enqueueSnackbar(res.msg, { variant: res.type });
+      notify(enqueueSnackbar, res?.msg, res?.status);
 
       if (res.type === "error") {
         setSubmitting(false);
@@ -30,7 +31,7 @@ export default function DeleteProductModal({ clothes, setClothes, product }) {
       setOpen(false);
       setSubmitting(false);
     } catch (err) {
-      enqueueSnackbar(err?.message || "Failed to delete product", { variant: "error" });
+      notify(enqueueSnackbar, err?.message || "Failed to delete product", 400);
       setSubmitting(false);
     }
   };

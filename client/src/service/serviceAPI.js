@@ -61,22 +61,22 @@ export default function clothesService() {
 const getUserInfo = (resp) => ({
   msg: resp.data.msg,
   token: resp.headers.token,
-  type: "success",
+  status: resp?.status ?? 500,
   user: resp.data.user,
 });
 
 const getProductsInfo = (resp) => ({
   data: resp.data,
-  type: "success",
+  status: resp?.status ?? 500,
 });
 
 const setProductsInfo = (resp) => ({
   msg: resp.data.msg,
-  type: "success",
+  status: resp?.status ?? 500,
 });
 
 const getError = (err) => ({
   code: err?.response?.status ?? 500,
   msg: err?.response?.data?.msg ?? err.message,
-  type: "error",
+  status: err?.status ?? 500,
 });

@@ -13,23 +13,18 @@ const signToken = (userId) => {
 router.post("/register", async (req, res) => {
   try {
     const { error } = registerValidation(req.body);
-    if (error)
-      return res.status(400).json({ type: "error", msg: error.details[0].message });
+    if (error) return res.status(400).json({ msg: error.details[0].message });
 
     const { name, email, password } = req.body;
 
     const emailExists = await User.exists({ email });
     if (emailExists) {
-      return res
-        .status(409)
-        .json({ type: "error", msg: "The email provided already exists." });
+      return res.status(409).json({ msg: "The email provided already exists." });
     }
 
     const nameExists = await User.exists({ name });
     if (nameExists) {
-      return res
-        .status(409)
-        .json({ type: "error", msg: "The username provided already exists." });
+      return res.status(409).json({ msg: "The username provided already exists." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -46,31 +41,29 @@ router.post("/register", async (req, res) => {
       .header("token", token)
       .status(201)
       .json({
-        type: "success",
         user: doc.name,
         msg: `User ${doc.name} created successfully!`,
       });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ type: "error", msg: "Registration failed." });
+    return res.status(500).json({ msg: "Registration failed." });
   }
 });
 
 router.post("/login", async (req, res) => {
   try {
     const { error } = loginValidation(req.body);
-    if (error)
-      return res.status(400).json({ type: "error", msg: error.details[0].message });
+    if (error) return res.status(400).json({ msg: error.details[0].message });
 
     const { name, password } = req.body;
 
     const user = await User.findOne({ name }).select("_id name password");
     const invalidMsg = "Username or password is incorrect.";
 
-    if (!user) return res.status(401).json({ type: "error", msg: invalidMsg });
+    if (!user) return res.status(401).json({ msg: invalidMsg });
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ type: "error", msg: invalidMsg });
+    if (!ok) return res.status(401).json({ msg: invalidMsg });
 
     const token = signToken(user._id);
 
@@ -78,13 +71,12 @@ router.post("/login", async (req, res) => {
       .header("token", token)
       .status(200)
       .json({
-        type: "success",
         user: user.name,
         msg: `Welcome back ${user.name}!`,
       });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ type: "error", msg: "Login failed." });
+    return res.status(500).json({ msg: "Login failed." });
   }
 });
 
@@ -93,16 +85,15 @@ router.delete("/", auth, async (req, res) => {
     const result = await User.deleteOne({ _id: req.user._id });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ type: "error", msg: "User not found." });
+      return res.status(404).json({ msg: "User not found." });
     }
 
     return res.status(200).json({
-      type: "success",
       msg: `User [${req.user._id}] was deleted successfully.`,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ type: "error", msg: "Failed to delete user." });
+    return res.status(500).json({ msg: "Failed to delete user." });
   }
 });
 

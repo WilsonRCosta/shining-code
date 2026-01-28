@@ -32,14 +32,10 @@
       },
       "AuthResponse": {
         "type": "object",
-        "required": ["user", "msg", "token"],
+        "required": ["msg"],
         "properties": {
-          "user": { "type": "string", "example": "shinning-code-admin" },
-          "msg": { "type": "string", "example": "Welcome back shinning-code-admin!" },
-          "token": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
+          "user": { "type": "string", "example": "wilson" },
+          "msg": { "type": "string", "example": "Welcome back wilson!" }
         }
       },
 
@@ -47,7 +43,7 @@
         "type": "object",
         "required": ["name", "email", "password"],
         "properties": {
-          "name": { "type": "string", "minLength": 6, "example": "shinning-code-admin" },
+          "name": { "type": "string", "minLength": 6, "example": "wilson" },
           "email": { "type": "string", "example": "admin@shinningcode.com" },
           "password": { "type": "string", "minLength": 6, "example": "secret123" }
         }
@@ -56,7 +52,7 @@
         "type": "object",
         "required": ["name", "password"],
         "properties": {
-          "name": { "type": "string", "example": "shinning-code-admin" },
+          "name": { "type": "string", "example": "wilson" },
           "password": { "type": "string", "example": "secret123" }
         }
       },
@@ -66,7 +62,7 @@
         "required": ["_id", "name", "email", "password", "date"],
         "properties": {
           "_id": { "type": "string", "example": "697368c2252e883eecaf1e0f" },
-          "name": { "type": "string", "minLength": 6, "example": "shinning-code-admin" },
+          "name": { "type": "string", "minLength": 6, "example": "wilson" },
           "email": { "type": "string", "example": "admin@shinningcode.com" },
           "password": {
             "type": "string",
@@ -246,7 +242,15 @@
             }
           },
           "401": {
-            "description": "Unauthorized / not admin",
+            "description": "Unauthorized user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an administrator",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -338,7 +342,15 @@
             }
           },
           "401": {
-            "description": "Unauthorized / not admin",
+            "description": "Unauthorized user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an administrator",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -384,7 +396,15 @@
             }
           },
           "401": {
-            "description": "Unauthorized / not admin",
+            "description": "Unauthorized user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an administrator",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -451,7 +471,15 @@
             }
           },
           "401": {
-            "description": "Unauthorized / not admin",
+            "description": "Unauthorized user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not an administrator",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -490,8 +518,14 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Registered (returns token)",
+            "headers": {
+              "token": {
+                "schema": { "type": "string" },
+                "description": "JWT token. Send it back in the 'token' request header."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AuthResponse" }
@@ -500,6 +534,14 @@
           },
           "400": {
             "description": "Validation / registration error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists with the given name or email",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -523,7 +565,13 @@
         },
         "responses": {
           "200": {
-            "description": "Logged in (returns token)",
+            "description": "Logged in (token in response header)",
+            "headers": {
+              "token": {
+                "schema": { "type": "string" },
+                "description": "JWT token. Send it back in the 'token' request header."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AuthResponse" }
@@ -558,14 +606,11 @@
       }
     },
 
-    "/auth/{id}": {
+    "/auth": {
       "delete": {
         "summary": "Delete current user (auth required)",
-        "description": "Your controller route is DELETE /:id but it deletes req.user._id (the authenticated user). The {id} path param is effectively ignored in the current implementation.",
+        "description": "Deletes req.user._id (the authenticated user).",
         "security": [{ "TokenHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
         "responses": {
           "200": {
             "description": "Deleted",
@@ -576,7 +621,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized user",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }

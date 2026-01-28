@@ -9,6 +9,7 @@ import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 import "./styles.css";
 import "filepond/dist/filepond.min.css";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
+import { getClosestColor } from "../../utils/color-utils";
 
 registerPlugin(
   FilePondPluginImageExifOrientation,
@@ -17,13 +18,21 @@ registerPlugin(
 );
 
 export default function ProductImageAndColor({
-  product,
   setProduct,
   activeImageAndColor,
   setActiveImageAndColor,
 }) {
   const [currColor, setCurrColor] = useState("");
   const [currFiles, setCurrFiles] = useState([]);
+
+  const colorLabel = useMemo(() => {
+    if (!currColor) return "UNKNOWN COLOR";
+
+    const res = getClosestColor(currColor);
+    if (!res.ok || !res.best) return "UNKNOWN COLOR";
+
+    return res.best.name.toUpperCase();
+  }, [currColor]);
 
   const showPicker = currFiles.length > 0;
 
@@ -86,17 +95,6 @@ export default function ProductImageAndColor({
               <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600">
                 Choose product color
               </div>
-
-              {currColor && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-600">Selected</span>
-                  <span
-                    className="h-5 w-5 rounded-full border border-black/20"
-                    style={{ backgroundColor: currColor }}
-                    title={currColor}
-                  />
-                </div>
-              )}
             </div>
 
             <div className="mt-4">
@@ -106,6 +104,18 @@ export default function ProductImageAndColor({
                 onChange={(color) => setCurrColor(color.hex)}
               />
             </div>
+
+            {currColor && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-neutral-600">Selected</span>
+                <span
+                  className="h-5 w-5 rounded-full border border-black/20"
+                  style={{ backgroundColor: currColor }}
+                  title={currColor}
+                />
+                <span className="text-xs font-semibold text-black">{colorLabel}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

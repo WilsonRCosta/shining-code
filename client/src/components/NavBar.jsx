@@ -15,7 +15,7 @@ const navLinkActive = "text-neutral-400";
 export default function NavBar() {
   const { wishlist } = useContext(WishlistContext);
   const { cart } = useContext(BagContext);
-  const { userProvider } = useContext(UserContext);
+  const { userProvider, logout, isAdmin } = useContext(UserContext);
   const [user] = userProvider;
 
   const [open, setOpen] = useState(false);
@@ -36,8 +36,6 @@ export default function NavBar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const displayUser = typeof user === "string" ? user : user?.name || user?.email || "";
 
   return (
     <header
@@ -92,22 +90,30 @@ export default function NavBar() {
           {/* Right actions */}
           <div className="flex items-center gap-2">
             {!user ? (
-              <>
-                <NavLink
-                  to="/signin"
-                  className="hidden md:inline-flex px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase bg-black text-white hover:bg-neutral-800 transition"
-                >
-                  Sign in
-                </NavLink>
-              </>
+              <NavLink
+                to="/signin"
+                className="hidden md:inline-flex px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase bg-black text-white hover:bg-neutral-800 transition"
+              >
+                Sign in
+              </NavLink>
             ) : (
               <>
-                <NavLink
-                  to="/admin/products"
-                  className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900 hover:text-neutral-500 transition"
+                {isAdmin && (
+                  <NavLink
+                    to="/admin/products"
+                    className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900 hover:text-neutral-500 transition"
+                  >
+                    Admin
+                  </NavLink>
+                )}
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 hover:text-black transition"
                 >
-                  Manage clothing
-                </NavLink>
+                  Logout
+                </button>
               </>
             )}
 
@@ -157,29 +163,33 @@ export default function NavBar() {
             <div className="grid gap-1 pt-2">
               <NavLink
                 to="/clothes/sales"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Sales
               </NavLink>
               <NavLink
                 to="/clothes/men"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Men
               </NavLink>
               <NavLink
                 to="/clothes/women"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Women
               </NavLink>
               <NavLink
                 to="/clothes/children"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Children
               </NavLink>
@@ -188,15 +198,17 @@ export default function NavBar() {
 
               <NavLink
                 to="/shopping-cart"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Cart {cartCount ? `(${cartCount})` : ""}
               </NavLink>
               <NavLink
                 to="/wishlist"
-                className={navLinkClass}
-                activeClassName={navLinkActive}
+                className={({ isActive }) =>
+                  isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                }
               >
                 Wishlist {wishCount ? `(${wishCount})` : ""}
               </NavLink>
@@ -204,24 +216,28 @@ export default function NavBar() {
               <div className="h-px bg-black/10 my-2" />
 
               {!user ? (
-                <>
-                  <NavLink
-                    to="/signin"
-                    className={navLinkClass}
-                    activeClassName={navLinkActive}
-                  >
-                    Sign in
-                  </NavLink>
-                </>
+                <NavLink
+                  to="/signin"
+                  className="md:hidden px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900"
+                >
+                  Sign in
+                </NavLink>
               ) : (
                 <>
                   <NavLink
                     to="/admin/products"
-                    className={navLinkClass}
-                    activeClassName={navLinkActive}
+                    className="md:hidden px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900"
                   >
                     Manage clothing
                   </NavLink>
+
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 hover:text-black transition"
+                  >
+                    Logout
+                  </button>
                 </>
               )}
             </div>

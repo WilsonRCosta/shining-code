@@ -1,115 +1,124 @@
 const router = require("express").Router();
-const fs = require("fs");
+const fs = require("fs/promises");
 const auth = require("../utils/verifyToken");
 const upload = require("../utils/uploadFiles");
 const productService = require("../service/product-service");
 const users = require("../model/user-model.js");
 
-router.get("/", (req, res) => {
-  productService
-    .getProducts()
-    .then((docs) => res.status(200).json(docs))
-    .catch((err) => res.status(500).json({ msg: err }));
-});
+// -------- helpers --------
 
-router.get("/:code", (req, res) => {
-  productService
-    .getProductsByCode(req.params.code)
-    .then((doc) => {
-      doc
-        ? res.status(200).json(doc)
-        : res.status(404).json({ msg: `${req.params.code} does not exist.` });
-    })
-    .catch((err) => res.status(500).json({ msg: err }));
-});
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
-router.post("/", auth, async (req, res) => {
-  if (!(await isAdmin(req.user._id)))
-    return res.status(401).json({
-      msg: `User ${req.user._id} is not authorized to add new products.`,
-    });
-  productService
-    .createProduct(req.body)
-    .then((doc) =>
-      res.status(201).json({
-        msg: `${doc.name} - [${doc.code}] was created successfully.`,
-      })
-    )
-    .catch((err) => {
-      err.code === 11000
-        ? res.status(409).json({ msg: `${req.body.code} already exists.` })
-        : res.status(500).json({ msg: err });
-    });
-});
-
-router.put("/:code/images", upload.array("files"), auth, async (req, res) => {
-  if (!(await isAdmin(req.user._id)))
-    return res.status(401).json({
-      msg: `User ${req.user._id} is not authorized to add images to products.`,
-    });
-  let offset = 0,
-    filesCtr = req.files.length;
-  if (!req.files) {
-    return res.status(422).json({ msg: "No files have been uploaded." });
-  }
-  return new Promise((resolve, reject) =>
-    req.files
-      .map((file) => ({
-        name: file.originalname,
-        data: fs.readFileSync(file.path),
-      }))
-      .forEach((file) => {
-        setTimeout(() => {
-          productService
-            .updateProductImage(req.body.code, file)
-            .catch((err) => res.status(500).json({ msg: err }));
-        }, 100 + offset);
-        offset += 100;
-        filesCtr--;
-        if (filesCtr === 0) resolve(res.status(200).json({ msg: "All files uploaded" }));
-      })
-  );
-});
-
-router.put("/:code", auth, async (req, res) => {
-  const admin = await isAdmin(req.user._id);
-  if (!admin) {
-    return res.status(401).json({
-      msg: `User ${req.user._id} is not authorized to edit products.`,
-    });
-  }
-  productService
-    .updateProduct(req.params.code, req.body)
-    .then((doc) => {
-      return doc
-        ? res.status(200).json({
-            msg: `${doc.name} - [${doc.code}] was edited successfully.`,
-          })
-        : res.status(404).json({ msg: `${req.params.code} does not exist.` });
-    })
-    .catch((err) => res.status(500).json({ msg: err }));
-});
-
-router.delete("/:code", auth, async (req, res) => {
-  const admin = await isAdmin(req.user._id);
-  if (!admin) {
-    return res.status(401).json({
-      msg: `User ${req.user._id} is not authorized to delete products.`,
-    });
-  }
-  productService
-    .deleteProduct(req.params.code)
-    .then((err) => {
-      err.deletedCount === 0
-        ? res.status(404).json({ msg: `${req.params.code} does not exist.` })
-        : res.status(200).json({ msg: `[${req.params.code}] was deleted successfully.` });
-    })
-    .catch((err) => res.status(500).json({ msg: err }));
-});
-
-// TODO: add SHINING_ADMIN ROLE TO USERS THAT CAN BE ADMIN
+// TODO: replace with real roles/permissions in DB
 const isAdmin = async (id) => {
-  return users.findOne({ _id: id, email: "admin@shinningcode.com" });
+  // Prefer: return Boolean(user?.role === 'admin')
+  const user = await users.findOne({ _id: id }).select("_id email role isAdmin");
+  return Boolean(user?.email === "admin@shinningcode.com");
 };
+
+const requireAdmin = asyncHandler(async (req, res, next) => {
+  const ok = await isAdmin(req.user._id);
+  if (!ok) {
+    return res.status(403).json({
+      msg: `User ${req.user._id} is not authorized to perform this action.`,
+    });
+  }
+  next();
+});
+
+// -------- routes --------
+
+router.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const docs = await productService.getProducts();
+    res.status(200).json(docs);
+  })
+);
+
+router.get(
+  "/:code",
+  asyncHandler(async (req, res) => {
+    const doc = await productService.getProductsByCode(req.params.code);
+    if (!doc) return res.status(404).json({ msg: `${req.params.code} does not exist.` });
+    res.status(200).json(doc);
+  })
+);
+
+router.post(
+  "/",
+  auth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    try {
+      const doc = await productService.createProduct(req.body);
+      return res.status(201).json({
+        msg: `${doc.name} - [${doc.code}] was created successfully.`,
+      });
+    } catch (err) {
+      if (err?.code === 11000) {
+        return res.status(409).json({ msg: `${req.body.code} already exists.` });
+      }
+      throw err;
+    }
+  })
+);
+
+router.put(
+  "/:code/images",
+  auth,
+  requireAdmin,
+  upload.array("files", 5),
+  asyncHandler(async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+      return res.status(422).json({ msg: "No files have been uploaded." });
+    }
+
+    const code = req.params.code;
+
+    const filePayloads = await Promise.all(
+      req.files.map(async (f) => {
+        const data = await fs.readFile(f.path);
+        return { name: f.originalname, data, path: f.path };
+      })
+    );
+
+    await Promise.all(
+      filePayloads.map((file) => productService.updateProductImage(code, file))
+    );
+
+    await Promise.allSettled(filePayloads.map((f) => fs.unlink(f.path)));
+
+    res.status(200).json({ msg: "All files uploaded" });
+  })
+);
+
+router.put(
+  "/:code",
+  auth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const doc = await productService.updateProduct(req.params.code, req.body);
+    if (!doc) return res.status(404).json({ msg: `${req.params.code} does not exist.` });
+
+    res.status(200).json({
+      msg: `${doc.name} - [${doc.code}] was edited successfully.`,
+    });
+  })
+);
+
+router.delete(
+  "/:code",
+  auth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const result = await productService.deleteProduct(req.params.code);
+    if (!result || result.deletedCount === 0) {
+      return res.status(404).json({ msg: `${req.params.code} does not exist.` });
+    }
+    res.status(200).json({ msg: `[${req.params.code}] was deleted successfully.` });
+  })
+);
 
 module.exports = router;

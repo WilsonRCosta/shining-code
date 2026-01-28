@@ -1,19 +1,604 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.3",
   "info": {
     "title": "Shining Code Project",
     "description": "Shining Code API",
-    "version": "1.0"
+    "version": "1.0.0"
   },
-  "host": "localhost:8000",
-  "basePath": "/api",
-  "schemes": ["http"],
+  "servers": [{ "url": "http://localhost:8000/api" }],
+  "components": {
+    "securitySchemes": {
+      "TokenHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "token",
+        "description": "JWT token returned by /auth/login or /auth/register. Send it in the 'token' header."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["msg"],
+        "properties": {
+          "msg": { "type": "string", "example": "Something went wrong." }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["msg"],
+        "properties": {
+          "msg": { "type": "string", "example": "OK" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "required": ["user", "msg", "token"],
+        "properties": {
+          "user": { "type": "string", "example": "shinning-code-admin" },
+          "msg": { "type": "string", "example": "Welcome back shinning-code-admin!" },
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        }
+      },
+
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": { "type": "string", "minLength": 6, "example": "shinning-code-admin" },
+          "email": { "type": "string", "example": "admin@shinningcode.com" },
+          "password": { "type": "string", "minLength": 6, "example": "secret123" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["name", "password"],
+        "properties": {
+          "name": { "type": "string", "example": "shinning-code-admin" },
+          "password": { "type": "string", "example": "secret123" }
+        }
+      },
+
+      "User": {
+        "type": "object",
+        "required": ["_id", "name", "email", "password", "date"],
+        "properties": {
+          "_id": { "type": "string", "example": "697368c2252e883eecaf1e0f" },
+          "name": { "type": "string", "minLength": 6, "example": "shinning-code-admin" },
+          "email": { "type": "string", "example": "admin@shinningcode.com" },
+          "password": {
+            "type": "string",
+            "description": "Hashed password (bcrypt). Typically you would NOT return this from the API.",
+            "example": "$2a$10$JcoLFpf6he/tFDPWrUbDae.Byuk5vsrZuFsdTYq5YGpDrBqVjFB2C"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-01-23T12:25:38.518Z"
+          }
+        }
+      },
+
+      "HexColor": {
+        "type": "string",
+        "pattern": "^#([A-Fa-f0-9]{6})$",
+        "example": "#ffffff"
+      },
+
+      "ClothingImage": {
+        "type": "object",
+        "required": ["name", "type", "color", "data"],
+        "properties": {
+          "name": { "type": "string", "example": "white.jpg" },
+          "type": {
+            "type": "string",
+            "example": "jpg",
+            "description": "File extension or mime subtype"
+          },
+          "color": { "$ref": "#/components/schemas/HexColor" },
+          "data": {
+            "type": "string",
+            "format": "byte",
+            "description": "Base64-encoded binary image data (recommended representation in JSON).",
+            "example": "iVBORw0KGgoAAAANSUhEUgAA..."
+          }
+        }
+      },
+
+      "Product": {
+        "type": "object",
+        "required": [
+          "_id",
+          "code",
+          "name",
+          "brand",
+          "genre",
+          "type",
+          "price",
+          "discount",
+          "salesPrice",
+          "colors",
+          "images"
+        ],
+        "properties": {
+          "_id": { "type": "string", "example": "605f5416ec5109279800b03b" },
+          "code": { "type": "string", "example": "MUN-51" },
+          "name": { "type": "string", "example": "T-Shirt Nike" },
+          "brand": { "type": "string", "example": "Nike" },
+          "genre": {
+            "type": "string",
+            "description": "Target group/category (e.g. men, women, kids)",
+            "example": "men"
+          },
+          "type": {
+            "type": "string",
+            "description": "Clothing type (e.g. t-shirt, hoodie, jeans)",
+            "example": "t-shirt"
+          },
+          "price": { "type": "number", "example": 30 },
+          "discount": { "type": "number", "example": 0 },
+          "salesPrice": { "type": "number", "example": 0 },
+          "colors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/HexColor" },
+            "example": ["#ffffff", "#000000"]
+          },
+          "images": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ClothingImage" }
+          }
+        }
+      },
+
+      "ProductCreateRequest": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string", "example": "MUN-51" },
+          "name": { "type": "string", "example": "T-Shirt Nike" },
+          "brand": { "type": "string", "example": "Nike" },
+          "genre": { "type": "string", "example": "men" },
+          "type": { "type": "string", "example": "t-shirt" },
+          "price": { "type": "number", "example": 30 },
+          "discount": { "type": "number", "example": 0 },
+          "salesPrice": { "type": "number", "example": 0 },
+          "colors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/HexColor" }
+          },
+          "images": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ClothingImage" },
+            "description": "Optional if you upload images via /products/{code}/images instead."
+          }
+        }
+      },
+
+      "ProductUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "brand": { "type": "string" },
+          "genre": { "type": "string" },
+          "type": { "type": "string" },
+          "price": { "type": "number" },
+          "discount": { "type": "number" },
+          "salesPrice": { "type": "number" },
+          "colors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/HexColor" }
+          },
+          "images": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ClothingImage" }
+          }
+        }
+      }
+    }
+  },
+
   "paths": {
     "/products": {
       "get": {
-        "description": "Get all products",
+        "summary": "Get all products",
         "responses": {
-          "200": {}
+          "200": {
+            "description": "Array of clothing products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Product" }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create product (admin only)",
+        "security": [{ "TokenHeader": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized / not admin",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate product code",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/products/{code}": {
+      "get": {
+        "summary": "Get product by code",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A clothing product",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Product" } }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update product (admin only)",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized / not admin",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete product (admin only)",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized / not admin",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/products/{code}/images": {
+      "put": {
+        "summary": "Upload product images (admin only)",
+        "description": "Uploads one or more files using multipart/form-data with field name 'files'. Your code uses multer upload.array('files').",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "binary" }
+                  }
+                },
+                "required": ["files"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized / not admin",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "No files uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/auth/register": {
+      "post": {
+        "summary": "Register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registered (returns token)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation / registration error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/auth/login": {
+      "post": {
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in (returns token)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/auth/{id}": {
+      "delete": {
+        "summary": "Delete current user (auth required)",
+        "description": "Your controller route is DELETE /:id but it deletes req.user._id (the authenticated user). The {id} path param is effectively ignored in the current implementation.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
       }
     }

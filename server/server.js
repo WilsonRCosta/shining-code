@@ -14,16 +14,20 @@ const port = process.env.PORT || 8000;
 
 app.use(express.json());
 
-app.use(cors({ origin: [process.env.ORIGIN] }));
+app.use(cors({ origin: [process.env.ORIGIN], exposedHeaders: ["token"] }));
 
 app.use("/api/products", productsController);
 app.use("/api/auth", usersController);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-mongoose.connect(process.env.DB_CONNECT, (err) =>
-  err
-    ? console.error("Database not connected!\n" + err)
-    : console.log("Database connected")
-);
+app.use((err, req, res, _) => {
+  console.error(err);
+  res.status(500).json({ msg: "Internal server error" });
+});
+
+mongoose
+  .connect(process.env.DB_CONNECT)
+  .then(() => console.log("Database connected"))
+  .catch((err) => console.error("Database not connected!\n", err));
 
 app.listen(port, () => console.log(`Server running on port ${port}...`));

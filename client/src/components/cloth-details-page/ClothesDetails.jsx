@@ -5,7 +5,7 @@ import clothesService from "../../service/serviceAPI";
 import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
 import LoadingDimmer from "../LoadingDimmer";
 import { BagContext } from "../../contexts/BagContext";
-import colors from "ntcjs";
+import { getClosestColor } from "../../utils/color-utils";
 import { updateLocalCart, updateLocalWishlist } from "../../service/serviceLocalStorage";
 import { WishlistContext } from "../../contexts/WishlistContext";
 
@@ -42,6 +42,15 @@ export default function ClothesDetails() {
     return cloth.images.filter((im) => im.color === currImage.color);
   }, [cloth, currImage]);
 
+  const colorName = useMemo(() => {
+    if (!currImage?.color) return "UNKNOWN COLOR";
+
+    const res = getClosestColor(currImage.color);
+    if (!res.ok || !res.best) return "UNKNOWN COLOR";
+
+    return res.best.name.toUpperCase();
+  }, [currImage?.color]);
+
   const findImageIndex = () => {
     if (!currImage) return { imgsWithColor: [], currImgIdx: -1 };
     const imgsWithColor = imagesOfCurrentColor;
@@ -52,12 +61,18 @@ export default function ClothesDetails() {
   const handleChangeCurrImageClickInColor = (clickedColor) => {
     if (!cloth?.images?.length) return;
     const first = cloth.images.find((i) => i.color === clickedColor);
-    if (first) setCurrImage(first);
+    if (first) setCurrImage({ ...first });
   };
 
   const handleChangeCurrImageClickInImage = (clickedImg) => {
     if (!cloth?.images?.length) return;
-    setCurrImage(cloth.images.find((image) => image.data === clickedImg.data));
+
+    const found = cloth.images.find((image) => image.data === clickedImg.data);
+
+    if (found) {
+      setCurrImage({ ...found });
+    }
+
     setNextImage(cloth.images.filter((img) => img.color === clickedImg.color).length > 1);
   };
 
@@ -142,14 +157,6 @@ export default function ClothesDetails() {
   if (!fetchComplete) return <LoadingDimmer complete={false} error={null} />;
   if (fetchError) return <LoadingDimmer complete={true} error={fetchError} />;
   if (!cloth || !currImage) return null;
-
-  const colorName = (() => {
-    try {
-      return colors.name(currImage.color)?.[1]?.toUpperCase() || "COLOR";
-    } catch {
-      return "COLOR";
-    }
-  })();
 
   return (
     <div className="min-h-screen bg-white">

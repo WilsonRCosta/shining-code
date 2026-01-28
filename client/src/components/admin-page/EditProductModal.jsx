@@ -4,6 +4,7 @@ import ImageAndColorGrid from "./ImageAndColorGrid";
 import { UserContext } from "../../contexts/UserContext";
 import { useSnackbar } from "notistack";
 import { FaPen, FaTimes, FaTrash } from "react-icons/fa";
+import { notify } from "../../utils/notify";
 
 const GENRE_OPTIONS = [
   { label: "Men", value: "men" },
@@ -153,7 +154,7 @@ export default function EditProductModal({ product, clothes, setClothes }) {
       const productToSend = moveImagesToFileArray(newProduct);
 
       const resp = await clothesService().editProduct(productToSend, token);
-      enqueueSnackbar(resp.msg, { variant: resp.type });
+      notify(enqueueSnackbar, resp?.msg, resp?.status);
 
       if (resp.type === "error") {
         setSaving(false);
@@ -167,7 +168,7 @@ export default function EditProductModal({ product, clothes, setClothes }) {
           token
         );
         if (imgResp.type === "error") {
-          enqueueSnackbar(imgResp.msg, { variant: imgResp.type });
+          notify(enqueueSnackbar, imgResp.msg, imgResp.status);
         }
       }
 
@@ -186,7 +187,7 @@ export default function EditProductModal({ product, clothes, setClothes }) {
       setSaving(false);
       setOpen(false);
     } catch (err) {
-      enqueueSnackbar(err?.message || "Failed to edit product", { variant: "error" });
+      notify(enqueueSnackbar, err?.message || "Failed to edit product", 400);
       setSaving(false);
     }
   };

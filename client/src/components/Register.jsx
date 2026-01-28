@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext";
 import clothesService from "../service/serviceAPI";
 import NavBar from "./NavBar";
+import { notify } from "../utils/notify";
 
 export default function Register() {
   const { enqueueSnackbar } = useSnackbar();
@@ -29,19 +30,12 @@ export default function Register() {
   );
 
   const setUserInfo = (resp) => {
-    const msg =
-      typeof resp?.msg === "string"
-        ? resp.msg
-        : resp?.msg
-          ? JSON.stringify(resp.msg)
-          : "Unexpected response from server";
-
-    enqueueSnackbar(msg, { variant: resp?.type || "default" });
+    notify(enqueueSnackbar, resp?.msg, resp?.status);
 
     if (resp?.user) setUser(resp.user);
     if (resp?.token) setToken(resp.token);
-
-    if (resp?.type === "success") history("/");
+    console.log(resp.status);
+    if (resp?.status >= 200 && resp?.status < 400) history("/");
   };
 
   const handleLoginSubmit = (e) => {
@@ -147,11 +141,10 @@ export default function Register() {
                 type="button"
                 className="text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 hover:text-black"
                 onClick={() =>
-                  enqueueSnackbar("Forgot password not implemented yet.", {
-                    variant: "info",
-                  })
+                  notify(enqueueSnackbar, "Forgot password not implemented yet.", 400)
                 }
               >
+                {/* TODO add forgot password feature */}
                 Forgot password?
               </button>
 

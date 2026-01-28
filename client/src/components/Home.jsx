@@ -20,7 +20,7 @@ export default function Home() {
       .getProducts()
       .then((resp) => {
         if (resp.type === "error") {
-          setFetchError({ code: resp.code, msg: resp.msg });
+          setFetchError({ code: resp.status, msg: resp.msg });
           return;
         }
 

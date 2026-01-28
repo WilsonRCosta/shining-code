@@ -3,6 +3,7 @@ import { useSnackbar } from "notistack";
 import clothesService from "../../service/serviceAPI";
 import ImageAndColorGrid from "./ImageAndColorGrid";
 import { UserContext } from "../../contexts/UserContext";
+import { notify } from "../../utils/notify";
 
 export default function AddProductModal({ clothes, setClothes }) {
   const { enqueueSnackbar } = useSnackbar();
@@ -118,10 +119,10 @@ export default function AddProductModal({ clothes, setClothes }) {
         salesPrice: product.discount ? Number(product.salesPrice) : 0,
       };
 
-      const createResp = await clothesService().createProduct(payload, token);
-      enqueueSnackbar(createResp.msg, { variant: createResp.type });
+      const resp = await clothesService().createProduct(payload, token);
+      notify(enqueueSnackbar, resp?.msg, resp?.status);
 
-      if (createResp.type === "error") {
+      if (resp?.status >= 400) {
         setSubmitting(false);
         return;
       }
@@ -134,8 +135,8 @@ export default function AddProductModal({ clothes, setClothes }) {
           token
         );
 
-        if (imgResp.type === "error") {
-          enqueueSnackbar(imgResp.msg, { variant: "error" });
+        if (imgResp?.status >= 400) {
+          notify(enqueueSnackbar, imgResp.msg, imgResp.status);
           setSubmitting(false);
           return;
         }
@@ -144,10 +145,10 @@ export default function AddProductModal({ clothes, setClothes }) {
       // Update list optimistically
       setClothes([...clothes, payload]);
 
-      enqueueSnackbar("Product created!", { variant: "success" });
+      notify(enqueueSnackbar, "Product created!", 200);
       closeAndReset();
     } catch (err) {
-      enqueueSnackbar(err?.message || "Something went wrong", { variant: "error" });
+      notify(enqueueSnackbar, err?.message || "Something went wrong", 400);
       setSubmitting(false);
     }
   };

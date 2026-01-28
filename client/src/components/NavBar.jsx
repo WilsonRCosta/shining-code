@@ -218,7 +218,7 @@ export default function NavBar() {
               {!user ? (
                 <NavLink
                   to="/signin"
-                  className="hidden md:inline-flex px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase bg-black text-white hover:bg-neutral-800 transition"
+                  className="md:hidden px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900"
                 >
                   Sign in
                 </NavLink>
@@ -226,7 +226,7 @@ export default function NavBar() {
                 <>
                   <NavLink
                     to="/admin/products"
-                    className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900 hover:text-neutral-500 transition"
+                    className="md:hidden px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900"
                   >
                     Manage clothing
                   </NavLink>

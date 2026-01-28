@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import bg from "./images/background.png";
 
 import Home from "./components/Home";
@@ -35,24 +35,16 @@ export default function App() {
           <UserContextProvider>
             <WishlistContextProvider>
               <BagContextProvider>
-                <Switch>
-                  <Route exact path="/" component={Home} />
-                  <Route exact path="/wishlist" component={Wishlist} />
-                  <Route exact path="/shopping-cart" component={ShoppingCart} />
-                  <Route exact path="/signin" component={Register} />
-                  <Route exact path="/clothes/sales" component={Clothes} />
-                  <Route exact path="/admin/products" component={AdminProducts} />
-                  <Route
-                    exact
-                    path="/clothes/:genre"
-                    render={({ match }) => <Clothes genre={match.params.genre} />}
-                  />
-                  <Route
-                    exact
-                    path="/clothes/:genre/:code"
-                    render={({ match }) => <ClothesDetails code={match.params.code} />}
-                  />
-                </Switch>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/shopping-cart" element={<ShoppingCart />} />
+                  <Route path="/signin" element={<Register />} />
+                  <Route path="/clothes/sales" element={<Clothes />} />
+                  <Route path="/admin/products" element={<AdminProducts />} />
+                  <Route path="/clothes/:genre" element={<Clothes />} />
+                  <Route path="/clothes/:genre/:code" element={<ClothesDetails />} />
+                </Routes>
               </BagContextProvider>
             </WishlistContextProvider>
           </UserContextProvider>

@@ -11,8 +11,10 @@ import ClothesSortDropdown from "./ClothesSortDropdown";
 
 import { WishlistContext } from "../../contexts/WishlistContext";
 import { updateLocalWishlist } from "../../service/serviceLocalStorage";
+import { useParams } from "react-router-dom";
 
-export default function Clothes({ genre }) {
+export default function Clothes() {
+  const { genre } = useParams();
   const [fetchComplete, setFetchComplete] = useState(false);
   const [fetchError, setFetchError] = useState({ code: null, msg: null });
 

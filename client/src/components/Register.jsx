@@ -1,13 +1,13 @@
 import React, { useContext, useMemo, useState } from "react";
 import { useSnackbar } from "notistack";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext";
 import clothesService from "../service/serviceAPI";
 import NavBar from "./NavBar";
 
 export default function Register() {
   const { enqueueSnackbar } = useSnackbar();
-  const history = useHistory();
+  const history = useNavigate();
 
   // false = login, true = signup
   const [registryType, toggleRegistry] = useState(false);
@@ -41,7 +41,7 @@ export default function Register() {
     if (resp?.user) setUser(resp.user);
     if (resp?.token) setToken(resp.token);
 
-    if (resp?.type === "success") history.push("/");
+    if (resp?.type === "success") history("/");
   };
 
   const handleLoginSubmit = (e) => {

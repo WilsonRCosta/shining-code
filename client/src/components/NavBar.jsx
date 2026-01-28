@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { FaBars, FaTimes, FaHeart, FaShoppingCart, FaUserCircle } from "react-icons/fa";
+import { FaBars, FaTimes, FaHeart, FaShoppingCart } from "react-icons/fa";
 
 import homeLogo from "../images/logo.png";
 import { WishlistContext } from "../contexts/WishlistContext";
@@ -57,29 +57,33 @@ export default function NavBar() {
           <nav className="hidden md:flex items-center">
             <NavLink
               to="/clothes/sales"
-              className={navLinkClass}
-              activeClassName={navLinkActive}
+              className={({ isActive }) =>
+                isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+              }
             >
               Sales
             </NavLink>
             <NavLink
               to="/clothes/men"
-              className={navLinkClass}
-              activeClassName={navLinkActive}
+              className={({ isActive }) =>
+                isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+              }
             >
               Men
             </NavLink>
             <NavLink
               to="/clothes/women"
-              className={navLinkClass}
-              activeClassName={navLinkActive}
+              className={({ isActive }) =>
+                isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+              }
             >
               Women
             </NavLink>
             <NavLink
               to="/clothes/children"
-              className={navLinkClass}
-              activeClassName={navLinkActive}
+              className={({ isActive }) =>
+                isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+              }
             >
               Children
             </NavLink>

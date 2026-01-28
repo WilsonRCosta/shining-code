@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import NavBar from "../NavBar";
 import clothesService from "../../service/serviceAPI";
 import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
@@ -9,7 +9,8 @@ import colors from "ntcjs";
 import { updateLocalCart, updateLocalWishlist } from "../../service/serviceLocalStorage";
 import { WishlistContext } from "../../contexts/WishlistContext";
 
-export default function ClothesDetails({ code }) {
+export default function ClothesDetails() {
+  const { code } = useParams();
   const [cloth, setCloth] = useState(null);
 
   const [fetchError, setFetchError] = useState(null);

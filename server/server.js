@@ -18,7 +18,7 @@ app.use(cors({ origin: [process.env.ORIGIN], exposedHeaders: ["token"] }));
 
 app.use("/api/products", productsController);
 app.use("/api/auth", usersController);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use("/api/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use((err, req, res, _) => {
   console.error(err);

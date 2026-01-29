@@ -83,23 +83,18 @@
         "example": "#ffffff"
       },
 
-      "ClothingImage": {
+      "ProductImage": {
         "type": "object",
-        "required": ["name", "type", "color", "data"],
+        "required": ["fileId", "name", "mime"],
         "properties": {
-          "name": { "type": "string", "example": "white.jpg" },
-          "type": {
+          "fileId": {
             "type": "string",
-            "example": "jpg",
-            "description": "File extension or mime subtype"
+            "description": "MongoDB ObjectId string pointing to GridFS file",
+            "example": "697b6cdc9056b55e58e2d541"
           },
-          "color": { "$ref": "#/components/schemas/HexColor" },
-          "data": {
-            "type": "string",
-            "format": "byte",
-            "description": "Base64-encoded binary image data (recommended representation in JSON).",
-            "example": "iVBORw0KGgoAAAANSUhEUgAA..."
-          }
+          "name": { "type": "string", "example": "shirt.jpeg" },
+          "mime": { "type": "string", "example": "image/jpeg" },
+          "color": { "$ref": "#/components/schemas/HexColor" }
         }
       },
 
@@ -143,7 +138,7 @@
           },
           "images": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ClothingImage" }
+            "items": { "$ref": "#/components/schemas/ProductImage" }
           }
         }
       },
@@ -165,7 +160,7 @@
           },
           "images": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ClothingImage" },
+            "items": { "$ref": "#/components/schemas/ProductImage" },
             "description": "Optional if you upload images via /products/{code}/images instead."
           }
         }
@@ -187,7 +182,7 @@
           },
           "images": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ClothingImage" }
+            "items": { "$ref": "#/components/schemas/ProductImage" }
           }
         }
       }
@@ -477,6 +472,11 @@
                   "files": {
                     "type": "array",
                     "items": { "type": "string", "format": "binary" }
+                  },
+                  "colors": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/HexColor" },
+                    "description": "Optional. If present, must align with files[] by index."
                   }
                 },
                 "required": ["files"]
@@ -489,7 +489,21 @@
             "description": "Uploaded",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+                "schema": {
+                  "type": "object",
+                  "required": ["msg", "images", "colors"],
+                  "properties": {
+                    "msg": { "type": "string" },
+                    "images": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ProductImage" }
+                    },
+                    "colors": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/HexColor" }
+                    }
+                  }
+                }
               }
             }
           },
@@ -519,6 +533,38 @@
           },
           "500": {
             "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/images/{fileId}": {
+      "get": {
+        "summary": "Get image by fileId (GridFS)",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary image stream",
+            "content": {
+              "application/octet-stream": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }

@@ -121,6 +121,7 @@ export default function EditProductModal({ product, updateClothes }) {
   const handleResetImages = () => {
     setExistingImages([]);
     setNewImages([]);
+    setNewFiles([]);
   };
 
   const setProductForGrid = (updater) => {

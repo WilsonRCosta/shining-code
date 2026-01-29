@@ -12,7 +12,8 @@ const USERS_URL = "/api/auth";
 export default function clothesService() {
   return {
     // PRODUCT REQUESTS
-    getProducts: () => api.get(PRODUCTS_URL).then(getProductsInfo).catch(getError),
+    getProducts: (params) =>
+      api.get(PRODUCTS_URL, { params }).then(getProductsInfo).catch(getError),
 
     getProductByCode: (code) =>
       api.get(`${PRODUCTS_URL}/${code}`).then(getProductsInfo).catch(getError),

@@ -8,9 +8,13 @@ import { BagContext } from "../../contexts/BagContext";
 import { getClosestColor } from "../../utils/color-utils";
 import { updateLocalCart, updateLocalWishlist } from "../../service/serviceLocalStorage";
 import { WishlistContext } from "../../contexts/WishlistContext";
+import { notify } from "../../utils/notify";
+import { useSnackbar } from "notistack";
 
 export default function ClothesDetails() {
   const { code } = useParams();
+  const { enqueueSnackbar } = useSnackbar();
+
   const [cloth, setCloth] = useState(null);
 
   const [fetchError, setFetchError] = useState(null);
@@ -76,18 +80,11 @@ export default function ClothesDetails() {
     setNextImage(cloth.images.filter((img) => img.color === clickedImg.color).length > 1);
   };
 
-  const handleChangeCurrImageClickNextImage = () => {
+  const handleChangeCurrImageClickInArrows = (offset) => {
     const { imgsWithColor, currImgIdx } = findImageIndex();
     if (currImgIdx < 0) return;
-    const next = imgsWithColor[currImgIdx + 1];
+    const next = imgsWithColor[currImgIdx + offset];
     if (next) setCurrImage(next);
-  };
-
-  const handleChangeCurrImageClickPrevImage = () => {
-    const { imgsWithColor, currImgIdx } = findImageIndex();
-    if (currImgIdx < 0) return;
-    const prev = imgsWithColor[currImgIdx - 1];
-    if (prev) setCurrImage(prev);
   };
 
   const handleSetQuantity = (delta) => {
@@ -106,7 +103,7 @@ export default function ClothesDetails() {
   const addToCart = () => {
     if (!cloth) return;
     if (!size) {
-      alert("Please select size");
+      notify(enqueueSnackbar, "Please select size", 400);
       return;
     }
     const product = {
@@ -187,7 +184,7 @@ export default function ClothesDetails() {
                   aria-label={`Select image ${image.name}`}
                 >
                   <img
-                    className="aspect-[3/4] w-full object-cover"
+                    className="aspect-3/4 w-full object-cover"
                     src={`data:image/${image.type};base64,${image.data}`}
                     alt={cloth.name}
                   />
@@ -200,7 +197,7 @@ export default function ClothesDetails() {
           <div className="lg:col-span-7 order-1 lg:order-2">
             <div className="relative border border-black/10 bg-white">
               <img
-                className="w-full object-cover aspect-[3/4]"
+                className="w-full object-cover aspect-3/4"
                 src={`data:image/${currImage.type};base64,${currImage.data}`}
                 alt={cloth.name}
               />
@@ -208,7 +205,7 @@ export default function ClothesDetails() {
               {hasPrevImage && (
                 <button
                   type="button"
-                  onClick={handleChangeCurrImageClickPrevImage}
+                  onClick={() => handleChangeCurrImageClickInArrows(-1)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-black/10 hover:border-black/30 hover:bg-white transition flex items-center justify-center"
                   aria-label="Previous image"
                 >
@@ -219,7 +216,7 @@ export default function ClothesDetails() {
               {hasNextImage && (
                 <button
                   type="button"
-                  onClick={handleChangeCurrImageClickNextImage}
+                  onClick={() => handleChangeCurrImageClickInArrows(1)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 border border-black/10 hover:border-black/30 hover:bg-white transition flex items-center justify-center"
                   aria-label="Next image"
                 >
@@ -407,7 +404,7 @@ export default function ClothesDetails() {
                   aria-label={`Select image ${im.name}`}
                 >
                   <img
-                    className="aspect-[3/4] w-full object-cover"
+                    className="aspect-3/4 w-full object-cover"
                     src={`data:image/${im.type};base64,${im.data}`}
                     alt={cloth.name}
                   />

@@ -5,9 +5,12 @@ import { FaTrash } from "react-icons/fa";
 import NavBar from "./NavBar";
 import { BagContext } from "../contexts/BagContext";
 import { deleteFromLocalStorage } from "../service/serviceLocalStorage";
+import { notify } from "../utils/notify";
+import { useSnackbar } from "notistack";
 
 export default function ShoppingCart() {
   const { cart, setCart } = useContext(BagContext);
+  const { enqueueSnackbar } = useSnackbar();
 
   const total = useMemo(() => {
     if (!Array.isArray(cart)) return "0.00";
@@ -117,7 +120,7 @@ export default function ShoppingCart() {
 
                       {/* Mobile card */}
                       <div className="md:hidden flex gap-4">
-                        <div className="w-28 bg-neutral-100 overflow-hidden flex-shrink-0">
+                        <div className="w-28 bg-neutral-100 overflow-hidden shrink-0">
                           <img
                             src={`data:image/${img?.type};base64,${img?.data}`}
                             alt={item.name}
@@ -195,7 +198,9 @@ export default function ShoppingCart() {
                 <button
                   type="button"
                   className="mt-5 w-full bg-black text-white py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 transition"
-                  onClick={() => alert("Checkout not implemented yet.")}
+                  onClick={() =>
+                    notify(enqueueSnackbar, "Checkout not implemented yet.", 400)
+                  }
                 >
                   Checkout
                 </button>

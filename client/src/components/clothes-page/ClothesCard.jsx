@@ -20,7 +20,7 @@ export default function ClothesCard({
           <img
             src={`data:image/${img?.type};base64,${img?.data}`}
             alt={cloth.name}
-            className="h-[360px] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            className="h-90 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
           />
         </Link>
 

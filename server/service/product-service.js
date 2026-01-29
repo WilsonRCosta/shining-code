@@ -1,7 +1,12 @@
 const products = require("../model/product-model.js");
 
-const getProducts = () => {
-  return products.find();
+const getProducts = ({ genre, sale } = {}) => {
+  const filter = {};
+  if (genre) filter.genre = genre;
+
+  if (sale === true) filter.discount = { $gt: 0 };
+
+  return products.find(filter);
 };
 
 const getProductsByCode = (code) => {

@@ -32,17 +32,38 @@ const requireAdmin = asyncHandler(async (req, res, next) => {
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const docs = await productService.getProducts();
-    res.status(200).json(docs);
+    try {
+      const { genre, sale } = req.query;
+
+      const docs = await productService.getProducts({
+        genre,
+        sale: sale === "true",
+      });
+
+      return res.status(200).json(docs);
+    } catch (err) {
+      console.error("GET /api/products failed:", err);
+      return res.status(500).json({ msg: err?.message || "Failed to fetch products" });
+    }
   })
 );
 
 router.get(
   "/:code",
   asyncHandler(async (req, res) => {
-    const doc = await productService.getProductsByCode(req.params.code);
-    if (!doc) return res.status(404).json({ msg: `${req.params.code} does not exist.` });
-    res.status(200).json(doc);
+    const code = req?.params?.code;
+    try {
+      const doc = await productService.getProductsByCode(code);
+      if (!doc) {
+        return res.status(404).json({ msg: `${code} does not exist.` });
+      }
+      res.status(200).json(doc);
+    } catch (err) {
+      console.error("GET /api/products/:code failed:", err);
+      return res
+        .status(500)
+        .json({ msg: err?.message || `Failed to fetch product ${code}` });
+    }
   })
 );
 

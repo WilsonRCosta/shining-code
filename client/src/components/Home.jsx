@@ -10,29 +10,21 @@ export default function Home() {
   const [fetchComplete, setFetchComplete] = useState(false);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = () => {
     setFetchComplete(false);
 
     clothesService()
-      .getProducts()
+      .getProducts({ sale: true })
       .then((resp) => {
         if (resp.type === "error") {
           setFetchError({ code: resp.status, msg: resp.msg });
           return;
         }
 
-        setClothes(
-          resp.data
-            .filter((cl) => cl.salesPrice)
-            .sort((a, b) => (a.discount >= b.discount ? 1 : -1))
-        );
+        setClothes(resp.data.sort((a, b) => (a.discount >= b.discount ? 1 : -1)));
 
         setFetchComplete(true);
       });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -63,7 +55,7 @@ export default function Home() {
                     <img
                       src={`data:image/${img?.type};base64,${img?.data}`}
                       alt={cl.name}
-                      className="h-[260px] sm:h-[340px] lg:h-[420px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      className="h-65 sm:h-85 lg:h-105 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                       loading="lazy"
                     />
 

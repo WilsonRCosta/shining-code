@@ -11,10 +11,13 @@ import ClothesSortDropdown from "./ClothesSortDropdown";
 
 import { WishlistContext } from "../../contexts/WishlistContext";
 import { updateLocalWishlist } from "../../service/serviceLocalStorage";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 export default function Clothes() {
   const { genre } = useParams();
+  const { pathname } = useLocation();
+  const isSalesRoute = pathname === "/clothes/sales";
+
   const [fetchComplete, setFetchComplete] = useState(false);
   const [fetchError, setFetchError] = useState({ code: null, msg: null });
 
@@ -114,19 +117,15 @@ export default function Clothes() {
     setFetchComplete(false);
 
     clothesService()
-      .getProducts()
+      .getProducts(isSalesRoute ? { sale: true } : { genre })
       .then((resp) => {
         if (resp.type === "error") {
           setFetchError({ code: resp.code, msg: resp.msg });
           return;
         }
 
-        const clothes = genre
-          ? resp.data.filter((cl) => cl.genre === genre)
-          : resp.data.filter((cl) => cl.discount);
-
-        setCurrClothes(clothes);
-        setAllClothes(clothes);
+        setCurrClothes(resp.data);
+        setAllClothes(resp.data);
         setFetchComplete(true);
       });
   }, [genre]);

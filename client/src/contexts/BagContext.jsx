@@ -1,6 +1,6 @@
 import React, { createContext, useState } from "react";
 
-export const BagContext = createContext();
+export const BagContext = createContext(null);
 
 const BagContextProvider = (props) => {
   const [cart, setCart] = useState(

@@ -73,9 +73,11 @@ router.post(
   requireAdmin,
   asyncHandler(async (req, res) => {
     try {
+      delete req.body.code;
       const doc = await productService.createProduct(req.body);
       return res.status(201).json({
         msg: `${doc.name} - [${doc.code}] was created successfully.`,
+        code: doc.code,
       });
     } catch (err) {
       if (err?.code === 11000) {

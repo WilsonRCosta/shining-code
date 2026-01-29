@@ -5,7 +5,7 @@ import { useSnackbar } from "notistack";
 import { FaTrash } from "react-icons/fa";
 import { notify } from "../../utils/notify";
 
-export default function DeleteProductModal({ clothes, setClothes, product }) {
+export default function DeleteProductModal({ setClothes, code, name }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,7 +18,7 @@ export default function DeleteProductModal({ clothes, setClothes, product }) {
     try {
       setSubmitting(true);
 
-      const res = await clothesService().deleteProduct(product.code, token);
+      const res = await clothesService().deleteProduct(code, token);
 
       notify(enqueueSnackbar, res?.msg, res?.status);
 
@@ -27,7 +27,7 @@ export default function DeleteProductModal({ clothes, setClothes, product }) {
         return;
       }
 
-      setClothes((prev) => prev.filter((cl) => cl.code !== product.code));
+      setClothes((prev) => prev.filter((cl) => cl.code !== code));
       setOpen(false);
       setSubmitting(false);
     } catch (err) {
@@ -71,8 +71,7 @@ export default function DeleteProductModal({ clothes, setClothes, product }) {
             <div className="px-6 py-6">
               <p className="text-sm text-neutral-700">
                 Are you sure you want to delete{" "}
-                <span className="font-semibold text-black">{product?.name}</span> (
-                {product?.code})?
+                <span className="font-semibold text-black">{name}</span> ({code})?
               </p>
               <p className="mt-2 text-xs text-neutral-500">
                 This action cannot be undone.

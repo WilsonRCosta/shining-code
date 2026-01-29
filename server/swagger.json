@@ -150,7 +150,6 @@
 
       "ProductCreateRequest": {
         "type": "object",
-        "required": ["code"],
         "properties": {
           "code": { "type": "string", "example": "MUN-51" },
           "name": { "type": "string", "example": "T-Shirt Nike" },

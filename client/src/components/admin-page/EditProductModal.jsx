@@ -22,7 +22,7 @@ const TYPE_OPTIONS = [
   { label: "Underwear", value: "underwear" },
 ];
 
-export default function EditProductModal({ product, clothes, setClothes }) {
+export default function EditProductModal({ product, updateClothes }) {
   const { enqueueSnackbar } = useSnackbar();
 
   const [open, setOpen] = useState(false);
@@ -173,7 +173,7 @@ export default function EditProductModal({ product, clothes, setClothes }) {
       }
 
       // Update UI state
-      setClothes((prev) => {
+      updateClothes((prev) => {
         const idx = prev.findIndex((cl) => cl.code === productToSend.code);
         if (idx < 0) return prev;
 
@@ -454,7 +454,7 @@ export default function EditProductModal({ product, clothes, setClothes }) {
                 </div>
               )}
 
-              {/* Image & color picker (your existing component) */}
+              {/* Image & color picker */}
               {activeImageAndColor && (
                 <div className="mt-8">
                   <ImageAndColorGrid

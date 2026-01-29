@@ -73,6 +73,7 @@ const getProductsInfo = (resp) => ({
 
 const setProductsInfo = (resp) => ({
   msg: resp.data.msg,
+  code: resp.data.code,
   status: resp?.status ?? 500,
 });
 

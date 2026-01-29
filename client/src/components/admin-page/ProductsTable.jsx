@@ -77,14 +77,10 @@ export default function ProductsTable({ clothes, setClothes }) {
 
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <EditProductModal
-                      product={p}
-                      clothes={clothes}
-                      setClothes={setClothes}
-                    />
+                    <EditProductModal product={p} updateClothes={setClothes} />
                     <DeleteProductModal
-                      product={p}
-                      clothes={clothes}
+                      name={p?.name}
+                      code={p?.code}
                       setClothes={setClothes}
                     />
                   </div>

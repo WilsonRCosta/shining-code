@@ -70,17 +70,6 @@ export default function AddProductModal({ clothes, setClothes }) {
     setProduct((p) => ({ ...p, price: value }));
   };
 
-  const generateNumber = () => {
-    const random = Math.floor(Math.random() * 999);
-    return String(random).padStart(3, "0");
-  };
-
-  const buildCodeBlock = () => {
-    const codeGenre = product.genre?.charAt(0)?.toUpperCase() || "X";
-    const type2 = (product.type || "").replace("-", "").substring(0, 2).toUpperCase();
-    return `${codeGenre}${type2}-`;
-  };
-
   const changeDiscount = (value) => {
     const discount = Number(value);
     const price = Number(product.price || 0);
@@ -93,28 +82,12 @@ export default function AddProductModal({ clothes, setClothes }) {
     }));
   };
 
-  const generateUniqueCode = async () => {
-    const resp = await clothesService().getProducts();
-    if (resp.type === "error") throw new Error(resp.msg || "Failed to get products");
-
-    const existing = new Set(resp.data.map((p) => p.code));
-    const codeBlock = buildCodeBlock();
-
-    let code = codeBlock + generateNumber();
-    while (existing.has(code)) code = codeBlock + generateNumber();
-
-    return code;
-  };
-
   const createProductFlow = async () => {
     try {
       setSubmitting(true);
 
-      const code = await generateUniqueCode();
-
       const payload = {
         ...product,
-        code,
         price: Number(product.price),
         salesPrice: product.discount ? Number(product.salesPrice) : 0,
       };
@@ -131,7 +104,7 @@ export default function AddProductModal({ clothes, setClothes }) {
       if (payload.files?.length) {
         const imgResp = await clothesService().addImageToProduct(
           payload.files,
-          code,
+          resp?.code,
           token
         );
 
@@ -142,10 +115,9 @@ export default function AddProductModal({ clothes, setClothes }) {
         }
       }
 
-      // Update list optimistically
+      payload.code = resp.code;
       setClothes([...clothes, payload]);
 
-      notify(enqueueSnackbar, "Product created!", 200);
       closeAndReset();
     } catch (err) {
       notify(enqueueSnackbar, err?.message || "Something went wrong", 400);

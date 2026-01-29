@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
-
+import { resolveProductImage } from "../service/serviceAPI";
 import NavBar from "./NavBar";
 import { WishlistContext } from "../contexts/WishlistContext";
 import { BagContext } from "../contexts/BagContext";
@@ -81,7 +81,8 @@ export default function Wishlist() {
         {count > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {wishlist.map((wishItem) => {
-              const img = wishItem.images?.[0];
+              const img =
+                wishItem.images?.find((im) => im.fileId) || wishItem.images?.[0];
               const unitPrice = wishItem.discount ? wishItem.salesPrice : wishItem.price;
 
               return (
@@ -92,7 +93,7 @@ export default function Wishlist() {
                   >
                     <div className="relative bg-neutral-100 overflow-hidden">
                       <img
-                        src={`data:image/${img?.type};base64,${img?.data}`}
+                        src={resolveProductImage(img)}
                         alt={wishItem.name}
                         className="h-80 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                         loading="lazy"

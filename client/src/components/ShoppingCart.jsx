@@ -7,6 +7,7 @@ import { BagContext } from "../contexts/BagContext";
 import { deleteFromLocalStorage } from "../service/serviceLocalStorage";
 import { notify } from "../utils/notify";
 import { useSnackbar } from "notistack";
+import { resolveProductImage } from "../service/serviceAPI";
 
 export default function ShoppingCart() {
   const { cart, setCart } = useContext(BagContext);
@@ -61,7 +62,7 @@ export default function ShoppingCart() {
 
               <div className="divide-y divide-black/10">
                 {cart.map((item) => {
-                  const img = item.images?.[0];
+                  const img = item.images?.find((x) => x.fileId) || item.images?.[0];
                   const unitPrice = item.discount ? item.salesPrice : item.price;
 
                   return (
@@ -73,7 +74,7 @@ export default function ShoppingCart() {
                       <div className="hidden md:grid grid-cols-[120px_1fr_90px_110px_110px_48px] gap-4 items-center">
                         <div className="bg-neutral-100 overflow-hidden">
                           <img
-                            src={`data:image/${img?.type};base64,${img?.data}`}
+                            src={resolveProductImage(img)}
                             alt={item.name}
                             className="h-28 w-full object-cover"
                             loading="lazy"
@@ -122,7 +123,7 @@ export default function ShoppingCart() {
                       <div className="md:hidden flex gap-4">
                         <div className="w-28 bg-neutral-100 overflow-hidden shrink-0">
                           <img
-                            src={`data:image/${img?.type};base64,${img?.data}`}
+                            src={resolveProductImage(img)}
                             alt={item.name}
                             className="h-28 w-28 object-cover"
                             loading="lazy"

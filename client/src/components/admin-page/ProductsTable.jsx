@@ -2,7 +2,7 @@ import React from "react";
 import EditProductModal from "./EditProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 
-export default function ProductsTable({ clothes, setClothes }) {
+export default function ProductsTable({ clothes, manageClothes }) {
   return (
     <div className="mx-auto w-[95%] bg-white border border-black/10 shadow-sm">
       {/* Header */}
@@ -17,7 +17,7 @@ export default function ProductsTable({ clothes, setClothes }) {
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-[900px] w-full text-sm">
+        <table className="min-w-225 w-full text-sm">
           <thead className="sticky top-0 bg-white z-10 border-b border-black/10">
             <tr className="text-[11px] font-extrabold tracking-[0.20em] uppercase text-neutral-600">
               <th className="text-left px-5 py-3">Code</th>
@@ -33,12 +33,12 @@ export default function ProductsTable({ clothes, setClothes }) {
 
           <tbody className="divide-y divide-black/5">
             {clothes.map((p) => (
-              <tr key={p.code} className="hover:bg-black/[0.02] transition">
+              <tr key={p.code} className="hover:bg-black/2 transition">
                 <td className="px-5 py-4 text-neutral-500 font-mono text-xs">{p.code}</td>
 
                 <td className="px-5 py-4">
                   <a
-                    href={`/#/clothes/${p.genre}/${p.code}`}
+                    href={`/clothes/${p.genre}/${p.code}`}
                     className="text-neutral-900 hover:underline"
                   >
                     <span className="font-semibold">{p.name}</span>
@@ -58,30 +58,38 @@ export default function ProductsTable({ clothes, setClothes }) {
                 <td className="px-5 py-4 text-neutral-900">
                   {Number(p.price || 0).toFixed(2)}€
                 </td>
-
                 <td className="px-5 py-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {(p.colors || []).map((c) => (
-                      <span
-                        key={`${p.code}-${c}`}
-                        className="h-4 w-4 rounded-full border border-black/20"
-                        style={{ backgroundColor: c }}
-                        title={c}
-                      />
-                    ))}
-                    {(p.colors || []).length === 0 && (
-                      <span className="text-xs text-neutral-400">—</span>
-                    )}
-                  </div>
+                  {(() => {
+                    const derivedColors = Array.from(
+                      new Set((p.images || []).map((img) => img?.color).filter(Boolean))
+                    );
+
+                    return (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {derivedColors.map((c) => (
+                          <span
+                            key={`${p.code}-${c}`}
+                            className="h-4 w-4 rounded-full border border-black/20"
+                            style={{ backgroundColor: c }}
+                            title={c}
+                          />
+                        ))}
+
+                        {derivedColors.length === 0 && (
+                          <span className="text-xs text-neutral-400">—</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
 
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <EditProductModal product={p} updateClothes={setClothes} />
+                    <EditProductModal product={p} updateClothes={manageClothes} />
                     <DeleteProductModal
                       name={p?.name}
                       code={p?.code}
-                      setClothes={setClothes}
+                      deleteFromClothes={manageClothes}
                     />
                   </div>
                 </td>

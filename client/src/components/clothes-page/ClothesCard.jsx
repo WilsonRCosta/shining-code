@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { resolveProductImage } from "../../service/serviceAPI";
 
 export default function ClothesCard({
   cloth,
@@ -18,7 +19,7 @@ export default function ClothesCard({
       <div className="relative overflow-hidden bg-neutral-100">
         <Link to={`/clothes/${cloth.genre}/${cloth.code}`}>
           <img
-            src={`data:image/${img?.type};base64,${img?.data}`}
+            src={resolveProductImage(img)}
             alt={cloth.name}
             className="h-90 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
           />

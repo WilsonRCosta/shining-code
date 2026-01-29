@@ -1,7 +1,6 @@
 const router = require("express").Router();
-const fs = require("fs/promises");
 const auth = require("../utils/verifyToken");
-const upload = require("../utils/uploadFiles");
+const { customMulter } = require("../middlewares/multer-config");
 const productService = require("../service/product-service");
 const users = require("../model/user-model.js");
 
@@ -33,13 +32,7 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     try {
-      const { genre, sale } = req.query;
-
-      const docs = await productService.getProducts({
-        genre,
-        sale: sale === "true",
-      });
-
+      const docs = await productService.getProducts(req.query);
       return res.status(200).json(docs);
     } catch (err) {
       console.error("GET /api/products failed:", err);
@@ -73,8 +66,7 @@ router.post(
   requireAdmin,
   asyncHandler(async (req, res) => {
     try {
-      delete req.body.code;
-      const doc = await productService.createProduct(req.body);
+      const doc = await productService.createProduct({ ...req.body });
       return res.status(201).json({
         msg: `${doc.name} - [${doc.code}] was created successfully.`,
         code: doc.code,
@@ -92,28 +84,19 @@ router.put(
   "/:code/images",
   auth,
   requireAdmin,
-  upload.array("files", 5),
+  customMulter,
   asyncHandler(async (req, res) => {
-    if (!req.files || req.files.length === 0) {
-      return res.status(422).json({ msg: "No files have been uploaded." });
-    }
-
-    const code = req.params.code;
-
-    const filePayloads = await Promise.all(
-      req.files.map(async (f) => {
-        const data = await fs.readFile(f.path);
-        return { name: f.originalname, data, path: f.path };
-      })
+    const result = await productService.addImagesToProduct(
+      req.params.code,
+      req.files,
+      req.body.colors
     );
 
-    await Promise.all(
-      filePayloads.map((file) => productService.updateProductImage(code, file))
-    );
-
-    await Promise.allSettled(filePayloads.map((f) => fs.unlink(f.path)));
-
-    res.status(200).json({ msg: "All files uploaded" });
+    return res.status(result.status).json({
+      msg: result.msg,
+      images: result.images,
+      colors: result.colors,
+    });
   })
 );
 
@@ -122,12 +105,10 @@ router.put(
   auth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const doc = await productService.updateProduct(req.params.code, req.body);
-    if (!doc) return res.status(404).json({ msg: `${req.params.code} does not exist.` });
-
-    res.status(200).json({
-      msg: `${doc.name} - [${doc.code}] was edited successfully.`,
+    const result = await productService.updateProductAndImages(req.params.code, {
+      ...req.body,
     });
+    return res.status(result.status).json({ msg: result.msg });
   })
 );
 
@@ -136,11 +117,8 @@ router.delete(
   auth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const result = await productService.deleteProduct(req.params.code);
-    if (!result || result.deletedCount === 0) {
-      return res.status(404).json({ msg: `${req.params.code} does not exist.` });
-    }
-    res.status(200).json({ msg: `[${req.params.code}] was deleted successfully.` });
+    const out = await productService.deleteProductAndImages(req.params.code);
+    return res.status(out.status).json({ msg: out.msg });
   })
 );
 

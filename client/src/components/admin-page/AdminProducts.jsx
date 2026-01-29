@@ -37,7 +37,7 @@ export default function AdminProducts() {
       <div className="mx-auto max-w-6xl px-4 pt-6">
         {/* Top row */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <AddProductModal clothes={clothes} setClothes={setClothes} />
+          <AddProductModal clothes={clothes} addToClothes={(next) => setClothes(next)} />
 
           <div className="border border-black/10 px-6 py-4">
             <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-500">
@@ -56,7 +56,7 @@ export default function AdminProducts() {
 
             <div className="mt-6">
               {clothes.length > 0 ? (
-                <ProductsTable clothes={clothes} setClothes={setClothes} />
+                <ProductsTable clothes={clothes} manageClothes={setClothes} />
               ) : (
                 <div className="mt-20 border border-black/10 bg-white p-10 text-center">
                   <p className="text-sm font-semibold tracking-[0.18em] uppercase text-neutral-700">

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import NavBar from "../NavBar";
-import clothesService from "../../service/serviceAPI";
+import clothesService, { resolveProductImage } from "../../service/serviceAPI";
 import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
 import LoadingDimmer from "../LoadingDimmer";
 import { BagContext } from "../../contexts/BagContext";
@@ -41,6 +41,11 @@ export default function ClothesDetails() {
     return Number(unit) * Number(quantity);
   }, [cloth, quantity]);
 
+  const colors = useMemo(() => {
+    const imgs = cloth?.images || [];
+    return Array.from(new Set(imgs.map((im) => im?.color).filter(Boolean)));
+  }, [cloth]);
+
   const imagesOfCurrentColor = useMemo(() => {
     if (!cloth || !currImage) return [];
     return cloth.images.filter((im) => im.color === currImage.color);
@@ -58,7 +63,12 @@ export default function ClothesDetails() {
   const findImageIndex = () => {
     if (!currImage) return { imgsWithColor: [], currImgIdx: -1 };
     const imgsWithColor = imagesOfCurrentColor;
-    const currImgIdx = imgsWithColor.findIndex((i) => i.name === currImage.name);
+    const sameImg = (a, b) =>
+      a?.fileId && b?.fileId
+        ? String(a.fileId) === String(b.fileId)
+        : a?.name === b?.name;
+
+    const currImgIdx = imgsWithColor.findIndex((i) => sameImg(i, currImage));
     return { imgsWithColor, currImgIdx };
   };
 
@@ -71,7 +81,11 @@ export default function ClothesDetails() {
   const handleChangeCurrImageClickInImage = (clickedImg) => {
     if (!cloth?.images?.length) return;
 
-    const found = cloth.images.find((image) => image.data === clickedImg.data);
+    const found = cloth.images.find((image) =>
+      clickedImg?.fileId && image?.fileId
+        ? String(image.fileId) === String(clickedImg.fileId)
+        : image.name === clickedImg.name
+    );
 
     if (found) {
       setCurrImage({ ...found });
@@ -185,7 +199,7 @@ export default function ClothesDetails() {
                 >
                   <img
                     className="aspect-3/4 w-full object-cover"
-                    src={`data:image/${image.type};base64,${image.data}`}
+                    src={resolveProductImage(image)}
                     alt={cloth.name}
                   />
                 </button>
@@ -198,7 +212,7 @@ export default function ClothesDetails() {
             <div className="relative border border-black/10 bg-white">
               <img
                 className="w-full object-cover aspect-3/4"
-                src={`data:image/${currImage.type};base64,${currImage.data}`}
+                src={resolveProductImage(currImage)}
                 alt={cloth.name}
               />
 
@@ -339,27 +353,29 @@ export default function ClothesDetails() {
                     <div className="text-xs text-neutral-500">{colorName}</div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {cloth.colors.map((c) => {
-                      const active = currImage?.color === c;
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => handleChangeCurrImageClickInColor(c)}
-                          className={[
-                            "h-6 w-6 rounded-full border transition",
-                            active
-                              ? "border-black"
-                              : "border-black/20 hover:border-black/60",
-                          ].join(" ")}
-                          style={{ backgroundColor: c }}
-                          title={c}
-                          aria-label={`Select color ${c}`}
-                        />
-                      );
-                    })}
-                  </div>
+                  {colors.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {colors.map((c) => {
+                        const active = currImage?.color === c;
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => handleChangeCurrImageClickInColor(c)}
+                            className={[
+                              "h-6 w-6 rounded-full border transition",
+                              active
+                                ? "border-black"
+                                : "border-black/20 hover:border-black/60",
+                            ].join(" ")}
+                            style={{ backgroundColor: c }}
+                            title={c}
+                            aria-label={`Select color ${c}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Add to cart */}
@@ -405,7 +421,7 @@ export default function ClothesDetails() {
                 >
                   <img
                     className="aspect-3/4 w-full object-cover"
-                    src={`data:image/${im.type};base64,${im.data}`}
+                    src={resolveProductImage(im)}
                     alt={cloth.name}
                   />
                 </button>

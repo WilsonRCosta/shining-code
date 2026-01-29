@@ -40,7 +40,7 @@ export default function Clothes() {
     setCurrImages(
       allClothes.map((product) => ({
         code: product.code,
-        currImage: product.images?.[0],
+        currImage: product.images?.find((im) => im.fileId) || product.images?.[0],
       }))
     );
   };
@@ -134,7 +134,7 @@ export default function Clothes() {
     setCurrImages(
       currClothes.map((product) => ({
         code: product.code,
-        currImage: product.images?.[0],
+        currImage: product.images?.find((im) => im.fileId) || product.images?.[0],
       }))
     );
 

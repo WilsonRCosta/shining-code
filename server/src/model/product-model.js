@@ -40,8 +40,14 @@ const productSchema = new mongoose.Schema({
   discount: { type: Number },
   salesPrice: { type: Number },
 
-  colors: { type: Array },
-  images: { type: Array },
+  images: [
+    {
+      fileId: mongoose.Schema.Types.ObjectId,
+      name: String,
+      mime: String,
+      color: String,
+    },
+  ],
 });
 
 productSchema.pre("validate", async function () {

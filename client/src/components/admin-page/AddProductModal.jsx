@@ -5,7 +5,7 @@ import ImageAndColorGrid from "./ImageAndColorGrid";
 import { UserContext } from "../../contexts/UserContext";
 import { notify } from "../../utils/notify";
 
-export default function AddProductModal({ clothes, setClothes }) {
+export default function AddProductModal({ clothes, addToClothes }) {
   const { enqueueSnackbar } = useSnackbar();
 
   const emptyProduct = useMemo(
@@ -86,13 +86,16 @@ export default function AddProductModal({ clothes, setClothes }) {
     try {
       setSubmitting(true);
 
-      const payload = {
+      const createPayload = {
         ...product,
+        files: [],
+        images: [],
+        colors: [],
         price: Number(product.price),
         salesPrice: product.discount ? Number(product.salesPrice) : 0,
       };
 
-      const resp = await clothesService().createProduct(payload, token);
+      const resp = await clothesService().createProduct(createPayload, token);
       notify(enqueueSnackbar, resp?.msg, resp?.status);
 
       if (resp?.status >= 400) {
@@ -100,11 +103,24 @@ export default function AddProductModal({ clothes, setClothes }) {
         return;
       }
 
-      // Upload images
-      if (payload.files?.length) {
+      if ((product.files?.length || 0) !== (product.images?.length || 0)) {
+        notify(enqueueSnackbar, "Images and colors mismatch. Please re-add images.", 400);
+        setSubmitting(false);
+        return;
+      }
+
+      const code = resp.code;
+
+      let images = [];
+      let colors = [];
+
+      if (product.files?.length) {
+        const perFileColors = (product.images || []).map((img) => img.color || null);
+
         const imgResp = await clothesService().addImageToProduct(
-          payload.files,
-          resp?.code,
+          product.files,
+          perFileColors,
+          code,
           token
         );
 
@@ -113,11 +129,20 @@ export default function AddProductModal({ clothes, setClothes }) {
           setSubmitting(false);
           return;
         }
+
+        notify(enqueueSnackbar, imgResp.msg || "All images uploaded.", imgResp.status);
+        images = imgResp.images ?? [];
+        colors = imgResp.colors ?? [];
       }
 
-      payload.code = resp.code;
-      setClothes([...clothes, payload]);
+      const productForUI = {
+        ...createPayload,
+        code,
+        images,
+        colors,
+      };
 
+      addToClothes([...clothes, productForUI]);
       closeAndReset();
     } catch (err) {
       notify(enqueueSnackbar, err?.message || "Something went wrong", 400);

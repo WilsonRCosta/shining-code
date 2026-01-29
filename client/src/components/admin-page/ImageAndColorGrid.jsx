@@ -53,7 +53,6 @@ export default function ProductImageAndColor({
       name: image.name,
       type: image.name.slice(image.name.lastIndexOf(".") + 1),
       color: currColor,
-      data: null,
     }));
 
     setProduct((prev) => ({
@@ -64,6 +63,8 @@ export default function ProductImageAndColor({
     }));
 
     setActiveImageAndColor(!activeImageAndColor);
+    setCurrFiles([]);
+    setCurrColor("");
   };
 
   return (

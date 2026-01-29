@@ -19,30 +19,31 @@ export default function clothesService() {
       api.get(`${PRODUCTS_URL}/${code}`).then(getProductsInfo).catch(getError),
 
     createProduct: (product, token) => {
-      const { files, ...rest } = product; // remove files
+      const { files, ...rest } = product;
       return api
         .post(PRODUCTS_URL, rest, { headers: { token } })
         .then(setProductsInfo)
         .catch(getError);
     },
 
-    addImageToProduct: (files, code, token) => {
+    addImageToProduct: (files, colors, code, token) => {
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file, file.name));
+      colors.forEach((color) => formData.append("colors", color));
 
       return api
-        .put(`${PRODUCTS_URL}/${code}/images`, formData, {
-          headers: { token },
-        })
-        .then(setProductsInfo)
+        .put(`${PRODUCTS_URL}/${code}/images`, formData, { headers: { token } })
+        .then(getImageInfo)
         .catch(getError);
     },
 
-    editProduct: (product, token) =>
-      api
-        .put(`${PRODUCTS_URL}/${product.code}`, product, { headers: { token } })
+    editProduct: (product, token) => {
+      const { files, ...rest } = product;
+      return api
+        .put(`${PRODUCTS_URL}/${product.code}`, rest, { headers: { token } })
         .then(setProductsInfo)
-        .catch(getError),
+        .catch(getError);
+    },
 
     deleteProduct: (code, token) =>
       api
@@ -82,3 +83,27 @@ const getError = (err) => ({
   msg: err?.response?.data?.msg ?? err.message,
   status: err?.status ?? 500,
 });
+
+const getImageInfo = (resp) => ({
+  msg: resp.data.msg,
+  images: resp.data.images,
+  colors: resp.data.colors,
+  status: resp.status,
+});
+
+export const resolveProductImage = (image) => {
+  if (!image) return "/placeholder.png";
+
+  if (image.fileId) {
+    const id = image.fileId.toString?.() ?? image.fileId;
+    return `${API_BASE}/api/images/${id}`;
+  }
+
+  if (image.data) {
+    return image.data.startsWith("data:")
+      ? image.data
+      : `data:image/${image.type};base64,${image.data}`;
+  }
+
+  return "/placeholder.png";
+};

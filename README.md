@@ -29,7 +29,7 @@ An admin area is included for managing products, pricing, discounts, and product
 	- Express (routes)
 	- MongoDB
 	- Mongoose (DB access)
+	- GridFS
 	- Filereader 
 	- Multer (files request handler)
 	- Path (Multer support)
-	- BinData (store files smaller than 16MB in database - alternative to GridFS)

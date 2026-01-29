@@ -5,7 +5,7 @@ import { useSnackbar } from "notistack";
 import { FaTrash } from "react-icons/fa";
 import { notify } from "../../utils/notify";
 
-export default function DeleteProductModal({ setClothes, code, name }) {
+export default function DeleteProductModal({ deleteFromClothes, code, name }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +27,7 @@ export default function DeleteProductModal({ setClothes, code, name }) {
         return;
       }
 
-      setClothes((prev) => prev.filter((cl) => cl.code !== code));
+      deleteFromClothes((prev) => prev.filter((cl) => cl.code !== code));
       setOpen(false);
       setSubmitting(false);
     } catch (err) {

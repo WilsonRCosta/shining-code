@@ -45,6 +45,7 @@ api.interceptors.response.use(
 
     if (original.url?.includes(`${USERS_URL}/refresh`)) {
       deleteUser();
+      window.location.assign("/");
       return Promise.reject(err);
     }
 

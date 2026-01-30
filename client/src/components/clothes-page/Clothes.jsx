@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import clothesService from "../../service/api-client";
 
 import NavBar from "../NavBar";
@@ -20,6 +20,7 @@ export default function Clothes() {
 
   const [fetchComplete, setFetchComplete] = useState(false);
   const [fetchError, setFetchError] = useState({ code: null, msg: null });
+  const hasError = !!fetchError?.code;
 
   const [currClothes, setCurrClothes] = useState([]);
   const [allClothes, setAllClothes] = useState([]);
@@ -113,22 +114,32 @@ export default function Clothes() {
     updateLocalWishlist(newWishObj);
   };
 
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     setFetchComplete(false);
+    setFetchError({ code: null, msg: null });
 
     clothesService()
       .getProducts(isSalesRoute ? { sale: true } : { genre })
       .then((resp) => {
         if (resp.type === "error") {
           setFetchError({ code: resp.code, msg: resp.msg });
+          setFetchComplete(true);
           return;
         }
 
         setCurrClothes(resp.data);
         setAllClothes(resp.data);
         setFetchComplete(true);
+      })
+      .catch((e) => {
+        setFetchError({ code: 500, msg: e?.message || "Unknown error" });
+        setFetchComplete(true);
       });
-  }, [genre]);
+  }, [genre, isSalesRoute]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   useEffect(() => {
     setCurrImages(
@@ -172,8 +183,12 @@ export default function Clothes() {
     <div className="min-h-screen bg-white">
       <NavBar />
 
-      {!fetchComplete ? (
-        <LoadingDimmer complete={fetchComplete} error={fetchError} />
+      {!fetchComplete || hasError ? (
+        <LoadingDimmer
+          complete={fetchComplete}
+          error={hasError ? fetchError : null}
+          onRetry={loadProducts}
+        />
       ) : (
         <main className="mx-auto max-w-6xl px-4 py-6">
           <div className="flex items-start justify-between gap-4">

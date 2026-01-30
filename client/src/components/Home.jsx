@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NavBar from "./NavBar";
 import clothesService, { resolveProductImage } from "../service/api-client";
@@ -6,32 +6,46 @@ import LoadingDimmer from "./LoadingDimmer";
 
 export default function Home() {
   const [salesClothes, setClothes] = useState([]);
-  const [fetchError, setFetchError] = useState(null);
+  const [fetchError, setFetchError] = useState({ code: null, msg: null });
   const [fetchComplete, setFetchComplete] = useState(false);
+  const hasError = !!fetchError?.code;
 
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     setFetchComplete(false);
+    setFetchError({ code: null, msg: null });
 
     clothesService()
       .getProducts({ sale: true })
       .then((resp) => {
         if (resp.type === "error") {
-          setFetchError({ code: resp.status, msg: resp.msg });
+          setFetchError({ code: resp.code, msg: resp.msg });
+          setFetchComplete(true);
           return;
         }
 
-        setClothes(resp.data.sort((a, b) => (a.discount >= b.discount ? 1 : -1)));
-
+        setClothes([...resp.data].sort((a, b) => (b.discount || 0) - (a.discount || 0)));
+        setFetchComplete(true);
+      })
+      .catch((e) => {
+        setFetchError({ code: 500, msg: e?.message || "Unknown error" });
         setFetchComplete(true);
       });
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   return (
     <div className="min-h-screen">
       <NavBar />
 
-      {!fetchComplete ? (
-        <LoadingDimmer complete={fetchComplete} error={fetchError} />
+      {!fetchComplete || hasError ? (
+        <LoadingDimmer
+          complete={fetchComplete}
+          error={hasError ? fetchError : null}
+          onRetry={loadProducts}
+        />
       ) : (
         <div className="px-4 sm:px-6 lg:px-10 py-6">
           <div className="mb-6">

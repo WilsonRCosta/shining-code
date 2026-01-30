@@ -87,7 +87,7 @@ router.post("/refresh", async (req, res) => {
   } catch (err) {
     console.error(err);
 
-    res.clearCookie("refresh_token", { path: "/api/auth/refresh" });
+    res.clearCookie("refresh_token", { path: "/api/aut" });
 
     const status = err.status || 500;
     const msg = status === 401 ? err.message : "Refresh failed.";
@@ -104,7 +104,7 @@ router.post("/logout", async (req, res) => {
     console.error(err);
   }
 
-  res.clearCookie("refresh_token", { path: "/api/auth/refresh" });
+  res.clearCookie("refresh_token", { path: "/api/auth" });
   return res.status(200).json({ msg: "User logged out." });
 });
 

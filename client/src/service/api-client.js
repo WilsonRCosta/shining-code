@@ -43,17 +43,14 @@ api.interceptors.response.use(
 
     if (status !== 401 || !original) return Promise.reject(err);
 
-    // Don't try to refresh if refresh itself failed
     if (original.url?.includes(`${USERS_URL}/refresh`)) {
       deleteUser();
       return Promise.reject(err);
     }
 
-    // Only retry once
     if (original._retry) return Promise.reject(err);
     original._retry = true;
 
-    // If refresh already running, wait for it
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         queue.push((newToken) => {
@@ -66,7 +63,6 @@ api.interceptors.response.use(
 
     isRefreshing = true;
     try {
-      // Must exist on server and return { token, user? }
       const refreshResp = await api.post(`${USERS_URL}/refresh`);
       const newToken = refreshResp.data?.token;
       const user = refreshResp.data?.user ?? getStoredUserInfo().user;
@@ -84,6 +80,7 @@ api.interceptors.response.use(
       isRefreshing = false;
       flushQueue(null);
       deleteUser();
+      window.location.assign("/");
       return Promise.reject(refreshErr);
     }
   }

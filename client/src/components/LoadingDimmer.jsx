@@ -1,4 +1,26 @@
-export default function LoadingDimmer({ complete, error }) {
+import { useEffect, useMemo, useState } from "react";
+
+export default function LoadingDimmer({ complete, error, onRetry }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (complete) return;
+
+    const start = Date.now();
+    const t = setInterval(() => {
+      setElapsed(Date.now() - start);
+    }, 250);
+
+    return () => clearInterval(t);
+  }, [complete]);
+
+  const message = useMemo(() => {
+    if (elapsed < 10000) return "Loading products, just a moment...";
+    if (elapsed < 25000)
+      return "Warming up the server… this can take ~30 seconds on first load.";
+    return "Still warming up… thanks for your patience. You can retry if it’s stuck.";
+  }, [elapsed]);
+
   const getErrorMessage = (code) => {
     switch (code) {
       case 400:
@@ -15,21 +37,34 @@ export default function LoadingDimmer({ complete, error }) {
     }
   };
 
-  // Loading state
+  // Loading
   if (!complete) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 px-6 text-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-black border-t-transparent" />
-          <p className="text-sm tracking-wide text-black">
-            Loading products, just a moment...
-          </p>
+
+          <p className="text-sm tracking-wide text-black">{message}</p>
+
+          {elapsed >= 25000 && (
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                onClick={() => onRetry?.()}
+                className="rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+              >
+                Retry
+              </button>
+              <span className="text-xs text-neutral-500">
+                {Math.floor(elapsed / 1000)}s
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Error state
+  // Error
   if (complete && error) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm px-4">
@@ -43,6 +78,13 @@ export default function LoadingDimmer({ complete, error }) {
           </h3>
 
           {error.msg && <p className="mt-2 text-sm text-neutral-600">{error.msg}</p>}
+
+          <button
+            onClick={() => onRetry?.()}
+            className="mt-4 rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

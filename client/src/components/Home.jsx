@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NavBar from "./NavBar";
-import clothesService, { resolveProductImage } from "../service/serviceAPI";
+import clothesService, { resolveProductImage } from "../service/api-client";
 import LoadingDimmer from "./LoadingDimmer";
 
 export default function Home() {

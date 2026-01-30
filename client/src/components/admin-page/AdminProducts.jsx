@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import NavBar from "../NavBar";
-import clothesService from "../../service/serviceAPI";
+import clothesService from "../../service/api-client";
 import LoadingDimmer from "../LoadingDimmer";
 import AddProductModal from "./AddProductModal";
 import SortProducts from "./SortProducts";

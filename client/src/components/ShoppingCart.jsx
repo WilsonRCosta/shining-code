@@ -4,10 +4,10 @@ import { FaTrash } from "react-icons/fa";
 
 import NavBar from "./NavBar";
 import { BagContext } from "../contexts/BagContext";
-import { deleteFromLocalStorage } from "../service/serviceLocalStorage";
+import { deleteFromLocalStorage } from "../service/local-storage";
 import { notify } from "../utils/notify";
 import { useSnackbar } from "notistack";
-import { resolveProductImage } from "../service/serviceAPI";
+import { resolveProductImage } from "../service/api-client";
 
 export default function ShoppingCart() {
   const { cart, setCart } = useContext(BagContext);

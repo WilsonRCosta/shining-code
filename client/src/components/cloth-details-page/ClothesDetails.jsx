@@ -1,12 +1,12 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import NavBar from "../NavBar";
-import clothesService, { resolveProductImage } from "../../service/serviceAPI";
+import clothesService, { resolveProductImage } from "../../service/api-client";
 import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
 import LoadingDimmer from "../LoadingDimmer";
 import { BagContext } from "../../contexts/BagContext";
 import { getClosestColor } from "../../utils/color-utils";
-import { updateLocalCart, updateLocalWishlist } from "../../service/serviceLocalStorage";
+import { updateLocalCart, updateLocalWishlist } from "../../service/local-storage";
 import { WishlistContext } from "../../contexts/WishlistContext";
 import { notify } from "../../utils/notify";
 import { useSnackbar } from "notistack";

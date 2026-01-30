@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const auth = require("../utils/verifyToken");
+const auth = require("../middlewares/verify-token");
 const { customMulter } = require("../middlewares/multer-config");
 const productService = require("../service/product-service");
 const users = require("../model/user-model.js");

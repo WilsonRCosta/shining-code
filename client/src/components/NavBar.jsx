@@ -6,6 +6,7 @@ import homeLogo from "../images/logo.png";
 import { WishlistContext } from "../contexts/WishlistContext";
 import { BagContext } from "../contexts/BagContext";
 import { UserContext } from "../contexts/UserContext";
+import clothesService from "../service/api-client";
 
 const navLinkClass =
   "px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900 hover:text-neutral-500 transition";
@@ -15,7 +16,7 @@ const navLinkActive = "text-neutral-400";
 export default function NavBar() {
   const { wishlist } = useContext(WishlistContext);
   const { cart } = useContext(BagContext);
-  const { userProvider, logout, isAdmin } = useContext(UserContext);
+  const { userProvider, clearContext, isAdmin } = useContext(UserContext);
   const [user] = userProvider;
 
   const [open, setOpen] = useState(false);
@@ -27,6 +28,12 @@ export default function NavBar() {
     () => (Array.isArray(wishlist) ? wishlist.length : 0),
     [wishlist]
   );
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    clearContext();
+    clothesService().logoutUser();
+  };
 
   useEffect(() => setOpen(false), [location.pathname]);
 
@@ -109,7 +116,7 @@ export default function NavBar() {
 
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 hover:text-black transition"
                 >
                   Logout

@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/UserContext";
-import clothesService from "../service/serviceAPI";
+import clothesService from "../service/api-client";
 import NavBar from "./NavBar";
 import { notify } from "../utils/notify";
 

@@ -21,7 +21,7 @@ export default function UserContextProvider({ children }) {
         setUser("");
         setToken("");
         deleteUser();
-        history("/");
+        history("/signin");
       },
     }),
     [user, token]

@@ -35,7 +35,7 @@ export default function Register() {
     if (resp?.user) setUser(resp.user);
     if (resp?.token) setToken(resp.token);
 
-    if (resp?.status >= 200 && resp?.status < 400) history("/");
+    if (resp?.status >= 200 && resp?.status < 400) history("/signin");
   };
 
   const handleLoginSubmit = (e) => {

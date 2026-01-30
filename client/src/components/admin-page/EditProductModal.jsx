@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useContext, useEffect } from "react";
-import clothesService, { resolveProductImage } from "../../service/serviceAPI";
+import React, { useMemo, useState, useEffect } from "react";
+import clothesService, { resolveProductImage } from "../../service/api-client";
 import ImageAndColorGrid from "./ImageAndColorGrid";
-import { UserContext } from "../../contexts/UserContext";
 import { useSnackbar } from "notistack";
 import { FaPen, FaTimes, FaTrash } from "react-icons/fa";
 import { notify } from "../../utils/notify";
@@ -24,8 +23,6 @@ const TYPE_OPTIONS = [
 
 export default function EditProductModal({ product, updateClothes }) {
   const { enqueueSnackbar } = useSnackbar();
-  const { tokenProvider } = useContext(UserContext);
-  const [token] = tokenProvider;
 
   const [open, setOpen] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
@@ -157,7 +154,7 @@ export default function EditProductModal({ product, updateClothes }) {
         images: existingImages,
       };
 
-      const resp = await clothesService().editProduct(productToSend, token);
+      const resp = await clothesService().editProduct(productToSend);
       notify(enqueueSnackbar, resp?.msg, resp?.status);
 
       if (resp?.status >= 400 || resp?.type === "error") {
@@ -174,8 +171,7 @@ export default function EditProductModal({ product, updateClothes }) {
         const imgResp = await clothesService().addImageToProduct(
           newFiles,
           perFileColors,
-          product.code,
-          token
+          product.code
         );
 
         if (imgResp?.status >= 400) {

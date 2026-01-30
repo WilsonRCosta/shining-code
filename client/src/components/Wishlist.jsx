@@ -1,11 +1,11 @@
 import React, { useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
-import { resolveProductImage } from "../service/serviceAPI";
+import { resolveProductImage } from "../service/api-client";
 import NavBar from "./NavBar";
 import { WishlistContext } from "../contexts/WishlistContext";
 import { BagContext } from "../contexts/BagContext";
-import { updateLocalCart, deleteFromLocalStorage } from "../service/serviceLocalStorage";
+import { updateLocalCart, deleteFromLocalStorage } from "../service/local-storage";
 
 export default function Wishlist() {
   const { wishlist, setWishlist } = useContext(WishlistContext);

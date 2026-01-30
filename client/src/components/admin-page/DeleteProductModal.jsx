@@ -1,6 +1,5 @@
-import React, { useState, useContext } from "react";
-import clothesService from "../../service/serviceAPI";
-import { UserContext } from "../../contexts/UserContext";
+import React, { useState } from "react";
+import clothesService from "../../service/api-client";
 import { useSnackbar } from "notistack";
 import { FaTrash } from "react-icons/fa";
 import { notify } from "../../utils/notify";
@@ -9,16 +8,13 @@ export default function DeleteProductModal({ deleteFromClothes, code, name }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const { tokenProvider } = useContext(UserContext);
-  const [token] = tokenProvider;
-
   const { enqueueSnackbar } = useSnackbar();
 
   const handleDeleteProduct = async () => {
     try {
       setSubmitting(true);
 
-      const res = await clothesService().deleteProduct(code, token);
+      const res = await clothesService().deleteProduct(code);
 
       notify(enqueueSnackbar, res?.msg, res?.status);
 

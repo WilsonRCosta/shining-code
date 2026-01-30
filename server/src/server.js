@@ -8,6 +8,7 @@ const usersController = require("./controller/user-controller.js");
 const imagesController = require("./controller/images-controller.js");
 const cors = require("cors");
 const errorHandler = require("./middlewares/error-handler");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 
@@ -15,10 +16,11 @@ const app = express();
 const port = process.env.PORT || 8000;
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: [process.env.ORIGIN || "http://localhost:5173"],
-    exposedHeaders: ["token"],
+    credentials: true,
   })
 );
 app.use("/api/products", productsController);

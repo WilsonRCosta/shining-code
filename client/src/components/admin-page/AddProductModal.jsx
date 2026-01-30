@@ -1,8 +1,7 @@
-import React, { useMemo, useState, useContext } from "react";
+import React, { useMemo, useState } from "react";
 import { useSnackbar } from "notistack";
-import clothesService from "../../service/serviceAPI";
+import clothesService from "../../service/api-client";
 import ImageAndColorGrid from "./ImageAndColorGrid";
-import { UserContext } from "../../contexts/UserContext";
 import { notify } from "../../utils/notify";
 
 export default function AddProductModal({ clothes, addToClothes }) {
@@ -26,9 +25,6 @@ export default function AddProductModal({ clothes, addToClothes }) {
   );
 
   const [product, setProduct] = useState(emptyProduct);
-  const { tokenProvider } = useContext(UserContext);
-  const [token] = tokenProvider;
-
   const [open, setOpen] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [activeImageAndColor, setActiveImageAndColor] = useState(false);
@@ -95,7 +91,7 @@ export default function AddProductModal({ clothes, addToClothes }) {
         salesPrice: product.discount ? Number(product.salesPrice) : 0,
       };
 
-      const resp = await clothesService().createProduct(createPayload, token);
+      const resp = await clothesService().createProduct(createPayload);
       notify(enqueueSnackbar, resp?.msg, resp?.status);
 
       if (resp?.status >= 400) {
@@ -120,8 +116,7 @@ export default function AddProductModal({ clothes, addToClothes }) {
         const imgResp = await clothesService().addImageToProduct(
           product.files,
           perFileColors,
-          code,
-          token
+          code
         );
 
         if (imgResp?.status >= 400) {

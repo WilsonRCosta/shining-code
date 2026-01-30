@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { resolveProductImage } from "../../service/serviceAPI";
+import { resolveProductImage } from "../../service/api-client";
 
 export default function ClothesCard({
   cloth,

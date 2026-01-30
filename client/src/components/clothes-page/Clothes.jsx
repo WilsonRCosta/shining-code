@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
-import clothesService from "../../service/serviceAPI";
+import clothesService from "../../service/api-client";
 
 import NavBar from "../NavBar";
 import LoadingDimmer from "../LoadingDimmer";
@@ -10,7 +10,7 @@ import ClothesCard from "./ClothesCard";
 import ClothesSortDropdown from "./ClothesSortDropdown";
 
 import { WishlistContext } from "../../contexts/WishlistContext";
-import { updateLocalWishlist } from "../../service/serviceLocalStorage";
+import { updateLocalWishlist } from "../../service/local-storage";
 import { useLocation, useParams } from "react-router-dom";
 
 export default function Clothes() {

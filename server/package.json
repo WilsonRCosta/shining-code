@@ -10,10 +10,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "author": "",
+  "author": "Wilson Costa",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.2",

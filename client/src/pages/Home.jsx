@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import NavBar from "./NavBar";
+import NavBar from "../components/NavBar";
 import clothesService, { resolveProductImage } from "../service/api-client";
-import LoadingDimmer from "./LoadingDimmer";
+import LoadingDimmer from "../components/LoadingDimmer";
 
 export default function Home() {
   const [salesClothes, setClothes] = useState([]);

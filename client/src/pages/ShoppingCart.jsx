@@ -1,31 +1,54 @@
-import { useContext, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 
-import NavBar from "./NavBar";
-import { BagContext } from "../contexts/BagContext";
-import { deleteFromLocalStorage } from "../service/local-storage";
-import { notify } from "../utils/notify";
+import NavBar from "../components/NavBar";
+import { CartContext } from "../contexts/CartContext";
+import { deleteFromLocalStorage, shoppingCartKey } from "../service/local-storage";
+import clothesService, { resolveProductImage } from "../service/api-client";
+import StripeWrapper from "../components/checkout-page/StripeWrapper";
+import CheckoutForm from "../components/checkout-page/CheckoutForm";
 import { useSnackbar } from "notistack";
-import { resolveProductImage } from "../service/api-client";
+import { notify } from "../utils/notify";
 
 export default function ShoppingCart() {
-  const { cart, setCart } = useContext(BagContext);
+  const { cart, setCart } = useContext(CartContext);
+  const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [paymentMismatch, setPaymentMismatch] = useState(false);
 
   const total = useMemo(() => {
-    if (!Array.isArray(cart)) return "0.00";
-    return cart
-      .reduce((sum, item) => sum + parseFloat(item.finalPrice || 0), 0)
-      .toFixed(2);
+    if (!Array.isArray(cart)) return 0;
+    return cart.reduce((sum, item) => sum + Number(item.finalPrice || 0), 0);
   }, [cart]);
+
+  const startCheckout = async () => {
+    setLoadingPayment(true);
+    try {
+      const res = await clothesService().createPaymentIntent(cart);
+      setClientSecret(res.clientSecret);
+      if (res.amountToPay === total) {
+        setShowCheckout(true);
+      } else {
+        setPaymentMismatch(true);
+        notify(enqueueSnackbar, "Invalid total amount to pay.", 400);
+      }
+    } catch (error) {
+      notify(enqueueSnackbar, error.msg, 400);
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
 
   const deleteItemFromCart = (item) => {
     const newCart = [...cart];
     const itemIdx = newCart.findIndex((i) => i.code === item.code);
     if (itemIdx > -1) newCart.splice(itemIdx, 1);
     setCart(newCart);
-    deleteFromLocalStorage("cart", item.code);
+    deleteFromLocalStorage(shoppingCartKey, item.code);
   };
 
   const count = Array.isArray(cart) ? cart.length : 0;
@@ -37,12 +60,12 @@ export default function ShoppingCart() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-black">
-            Shopping Bag
+            Shopping Cart
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
             {count === 1
-              ? "Your bag contains 1 product."
-              : `Your bag contains ${count} products.`}
+              ? "Your cart contains 1 product."
+              : `Your cart contains ${count} products.`}
           </p>
         </header>
 
@@ -189,7 +212,9 @@ export default function ShoppingCart() {
 
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-neutral-600">Total</span>
-                  <span className="text-lg font-semibold text-black">{total}€</span>
+                  <span className="text-lg font-semibold text-black">
+                    {total.toFixed(2)}€
+                  </span>
                 </div>
 
                 <p className="mt-3 text-xs text-neutral-500">
@@ -198,14 +223,21 @@ export default function ShoppingCart() {
 
                 <button
                   type="button"
-                  className="mt-5 w-full bg-black text-white py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 transition"
-                  onClick={() =>
-                    notify(enqueueSnackbar, "Checkout not implemented yet.", 400)
-                  }
+                  className="mt-5 w-full py-3 text-white bg-black transition disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
+                  onClick={startCheckout}
+                  disabled={loadingPayment || total <= 0 || paymentMismatch}
                 >
-                  Checkout
+                  {loadingPayment ? "Preparing payment..." : "Checkout"}
                 </button>
 
+                {showCheckout && clientSecret && (
+                  <StripeWrapper clientSecret={clientSecret}>
+                    <CheckoutForm
+                      amount={total}
+                      onSuccess={() => navigate("/order-confirmation")}
+                    />
+                  </StripeWrapper>
+                )}
                 <Link
                   to="/clothes/sales"
                   className="mt-3 block text-center text-xs font-semibold tracking-[0.18em] uppercase text-neutral-600 hover:text-black"
@@ -217,7 +249,7 @@ export default function ShoppingCart() {
           </div>
         ) : (
           <div className="mt-16 border border-black/10 p-8 text-center max-w-xl mx-auto">
-            <h3 className="text-lg font-semibold text-black">Your bag is empty.</h3>
+            <h3 className="text-lg font-semibold text-black">Your cart is empty.</h3>
             <p className="mt-2 text-sm text-neutral-500">
               Explore our store and add something you love.
             </p>

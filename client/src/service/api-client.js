@@ -14,6 +14,7 @@ const api = axios.create({
 
 const PRODUCTS_URL = "/api/products";
 const USERS_URL = "/api/auth";
+const PAYMENTS_URL = "/api/payments";
 
 // --------------------
 // Attach access token automatically
@@ -145,6 +146,13 @@ export default function clothesService() {
         .catch(getError),
 
     logoutUser: () => api.post(`${USERS_URL}/logout`),
+
+    // PAYMENTS
+    createPaymentIntent: (cart) =>
+      api
+        .post(`${PAYMENTS_URL}/payment-intent`, { cart })
+        .then(getPaymentInfo)
+        .catch(getError),
   };
 }
 
@@ -179,18 +187,17 @@ const getImageInfo = (resp) => ({
   status: resp.status,
 });
 
+const getPaymentInfo = (resp) => ({
+  amountToPay: resp.data.amountToPay,
+  clientSecret: resp.data.clientSecret,
+});
+
 export const resolveProductImage = (image) => {
   if (!image) return "/placeholder.png";
 
   if (image.fileId) {
     const id = image.fileId.toString?.() ?? image.fileId;
     return `${API_BASE}/api/images/${id}`;
-  }
-
-  if (image.data) {
-    return image.data.startsWith("data:")
-      ? image.data
-      : `data:image/${image.type};base64,${image.data}`;
   }
 
   return "/placeholder.png";

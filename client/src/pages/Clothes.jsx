@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
-import clothesService from "../../service/api-client";
+import clothesService from "../service/api-client";
 
-import NavBar from "../NavBar";
-import LoadingDimmer from "../LoadingDimmer";
-import ClothesSearchBar from "./ClothesSearchBar";
-import PathBreadcrumb from "./PathBreadcrumb";
-import ClothesMenu from "./ClothesMenu";
-import ClothesCard from "./ClothesCard";
-import ClothesSortDropdown from "./ClothesSortDropdown";
+import NavBar from "../components/NavBar";
+import LoadingDimmer from "../components/LoadingDimmer";
+import ClothesSearchBar from "../components/clothes-page/ClothesSearchBar";
+import PathBreadcrumb from "../components/clothes-page/PathBreadcrumb";
+import ClothesMenu from "../components/clothes-page/ClothesMenu";
+import ClothesCard from "../components/clothes-page/ClothesCard";
+import ClothesSortDropdown from "../components/clothes-page/ClothesSortDropdown";
 
-import { WishlistContext } from "../../contexts/WishlistContext";
-import { updateLocalWishlist } from "../../service/local-storage";
+import { WishlistContext } from "../contexts/WishlistContext";
+import { updateLocalWishlist } from "../service/local-storage";
 import { useLocation, useParams } from "react-router-dom";
 
 export default function Clothes() {

@@ -2,14 +2,18 @@ import React, { useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart, FaTrash } from "react-icons/fa";
 import { resolveProductImage } from "../service/api-client";
-import NavBar from "./NavBar";
+import NavBar from "../components/NavBar";
 import { WishlistContext } from "../contexts/WishlistContext";
-import { BagContext } from "../contexts/BagContext";
-import { updateLocalCart, deleteFromLocalStorage } from "../service/local-storage";
+import { CartContext } from "../contexts/CartContext";
+import {
+  updateLocalCart,
+  deleteFromLocalStorage,
+  wishlistKey,
+} from "../service/local-storage";
 
 export default function Wishlist() {
   const { wishlist, setWishlist } = useContext(WishlistContext);
-  const { cart, setCart } = useContext(BagContext);
+  const { cart, setCart } = useContext(CartContext);
 
   const count = Array.isArray(wishlist) ? wishlist.length : 0;
 
@@ -49,7 +53,7 @@ export default function Wishlist() {
   const handleDeleteFromWishlist = (item) => {
     const newWishlist = wishlist.filter((w) => w.code !== item.code);
     setWishlist(newWishlist);
-    deleteFromLocalStorage("wish", item.code);
+    deleteFromLocalStorage(wishlistKey, item.code);
   };
 
   return (
@@ -63,7 +67,7 @@ export default function Wishlist() {
               Wishlist
             </h1>
             <p className="mt-2 text-sm text-neutral-500">
-              Save items you love and add them to your bag anytime.
+              Save items you love and add them to your cart anytime.
             </p>
           </div>
 
@@ -140,7 +144,7 @@ export default function Wishlist() {
                       className="flex-1 bg-black text-white py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 transition inline-flex items-center justify-center gap-2"
                     >
                       <FaShoppingCart />
-                      Add to bag
+                      Add to cart
                     </button>
 
                     <button

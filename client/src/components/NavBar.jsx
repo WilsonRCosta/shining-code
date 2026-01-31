@@ -2,9 +2,8 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { FaBars, FaTimes, FaHeart, FaShoppingCart } from "react-icons/fa";
 
-import homeLogo from "../images/logo.png";
 import { WishlistContext } from "../contexts/WishlistContext";
-import { BagContext } from "../contexts/BagContext";
+import { CartContext } from "../contexts/CartContext";
 import { UserContext } from "../contexts/UserContext";
 import clothesService from "../service/api-client";
 
@@ -15,7 +14,7 @@ const navLinkActive = "text-neutral-400";
 
 export default function NavBar() {
   const { wishlist } = useContext(WishlistContext);
-  const { cart } = useContext(BagContext);
+  const { cart } = useContext(CartContext);
   const { userProvider, clearContext, isAdmin } = useContext(UserContext);
   const [user] = userProvider;
 
@@ -52,7 +51,11 @@ export default function NavBar() {
         <div className="h-[72px] flex items-center justify-between gap-3">
           {/* Brand */}
           <Link to="/" className="flex items-center gap-3 min-w-[180px]">
-            <img src={homeLogo} alt="Shining Code" className="h-12 w-12 object-contain" />
+            <img
+              src="/logo.png"
+              alt="Shining Code"
+              className="h-12 w-12 object-contain"
+            />
             <span className="text-sm font-extrabold tracking-[-0.02em] text-neutral-900">
               SHINING CODE
             </span>

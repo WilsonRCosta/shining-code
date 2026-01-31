@@ -1,14 +1,14 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import NavBar from "../NavBar";
-import clothesService, { resolveProductImage } from "../../service/api-client";
-import PathBreadcrumb from "../clothes-page/PathBreadcrumb";
-import LoadingDimmer from "../LoadingDimmer";
-import { BagContext } from "../../contexts/BagContext";
-import { getClosestColor } from "../../utils/color-utils";
-import { updateLocalCart, updateLocalWishlist } from "../../service/local-storage";
-import { WishlistContext } from "../../contexts/WishlistContext";
-import { notify } from "../../utils/notify";
+import NavBar from "../components/NavBar";
+import clothesService, { resolveProductImage } from "../service/api-client";
+import PathBreadcrumb from "../components/clothes-page/PathBreadcrumb";
+import LoadingDimmer from "../components/LoadingDimmer";
+import { CartContext } from "../contexts/CartContext";
+import { getClosestColor } from "../utils/color-utils";
+import { updateLocalCart, updateLocalWishlist } from "../service/local-storage";
+import { WishlistContext } from "../contexts/WishlistContext";
+import { notify } from "../utils/notify";
 import { useSnackbar } from "notistack";
 
 export default function ClothesDetails() {
@@ -27,7 +27,7 @@ export default function ClothesDetails() {
   const [hasNextImage, setNextImage] = useState(false);
   const [hasPrevImage, setPrevImage] = useState(false);
 
-  const { cart, setCart } = useContext(BagContext);
+  const { cart, setCart } = useContext(CartContext);
   const { wishlist, setWishlist } = useContext(WishlistContext);
 
   const isWishlisted = useMemo(() => {

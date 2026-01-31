@@ -1,70 +1,167 @@
-# Getting Started with Create React App
+# Client Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React application built with Vite, featuring file uploads, color manipulation, payment processing, and a responsive UI.
 
-## Available Scripts
+## Tech Stack
 
-In the project directory, you can run:
+### Core
+- **React** 19.2.0 - UI library
+- **Vite** 7.3.1 - Build tool and dev server
+- **React Router DOM** 7.13.0 - Client-side routing
 
-### `npm start`
+### Styling
+- **Tailwind CSS** 4.1.18 - Utility-first CSS framework
+- **Emotion** - CSS-in-JS styling
+- **PostCSS** & **Autoprefixer** - CSS processing
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Key Features & Libraries
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+#### File Management
+- **FilePond** - Modern file upload library
+    - Image preview support
+    - EXIF orientation handling
+    - File type validation
+    - React integration via `react-filepond`
 
-### `npm test`
+#### Payment Processing
+- **Stripe** - Payment integration
+    - `@stripe/stripe-js` - Stripe.js loader
+    - `@stripe/react-stripe-js` - React components for Stripe
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### Color Tools
+- **Culori** - Comprehensive color manipulation
+- **Color Name** - Color name utilities
+- **React Color** - Color picker components
 
-### `npm run build`
+#### UI/UX
+- **Notistack** - Snackbar notifications
+- **React Icons** - Icon library
+- **React Scroll** - Smooth scrolling functionality
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### HTTP & Data
+- **Axios** - HTTP client for API requests
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Getting Started
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerequisites
+- Node.js (v16 or higher recommended)
+- npm or yarn package manager
 
-### `npm run eject`
+### Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+# Install dependencies
+npm install
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Development
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+# Start development server
+npm run dev
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The application will be available at `http://localhost:5173` (default Vite port).
 
-## Learn More
+### Building for Production
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+# Create production build
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Build output will be in the `dist` directory.
 
-### Code Splitting
+### Preview Production Build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+# Preview the production build locally
+npm run preview
+```
 
-### Analyzing the Bundle Size
+## Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start Vite development server with HMR |
+| `npm run build` | Create optimized production build |
+| `npm run preview` | Preview production build locally |
+| `npm run format` | Format code with Prettier |
+| `npm run format:check` | Check code formatting without making changes |
 
-### Making a Progressive Web App
+## Environment Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Environment Variables
+Create a `.env` file in the root directory:
 
-### Advanced Configuration
+```env
+VITE_API_URL=http://localhost:8000
+VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Access in your code:
+```javascript
+const apiUrl = import.meta.env.VITE_API_URL;
+```
 
-### Deployment
+## Code Quality
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Prettier Configuration
+The project uses Prettier for code formatting. Run `npm run format` to automatically format all files.
 
-### `npm run build` fails to minify
+### Testing
+Testing setup includes:
+- `@testing-library/react` - React component testing
+- `@testing-library/jest-dom` - Custom Jest matchers
+- `@testing-library/user-event` - User interaction simulation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Key Dependencies Overview
+
+### File Upload Implementation
+```javascript
+import { FilePond } from 'react-filepond';
+import 'filepond/dist/filepond.min.css';
+import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
+```
+
+### Stripe Integration
+```javascript
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe('your_public_key');
+```
+
+### Notifications
+```javascript
+import { SnackbarProvider, enqueueSnackbar } from 'notistack';
+
+// Show notification
+enqueueSnackbar('Success!', { variant: 'success' });
+```
+
+## Project Structure (Recommended)
+
+```
+client/
+├── public/           # Static assets
+└── src/
+   ├── components/   # Reusable components
+   ├── contexts/     # Global contexts
+   ├── pages/        # Page components
+   ├── utils/        # Utility functions
+   └── services/     # API services
+```
+
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+**Note:** This is a client-side application that connects to a backend server running on `http://localhost:8000`.

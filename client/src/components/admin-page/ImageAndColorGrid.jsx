@@ -41,7 +41,6 @@ export default function ProductImageAndColor({
   }, [currFiles.length, currColor]);
 
   const handleFiles = (filepondItems) => {
-    // filepondItems is array of { file, ... }
     setCurrFiles(filepondItems.map((item) => item.file));
     if (filepondItems.length === 0) setCurrColor("");
   };
@@ -50,14 +49,12 @@ export default function ProductImageAndColor({
     if (!canConfirm) return;
 
     const newImages = currFiles.map((image) => ({
-      name: image.name,
       type: image.name.slice(image.name.lastIndexOf(".") + 1),
       color: currColor,
     }));
 
     setProduct((prev) => ({
       ...prev,
-      colors: Array.from(new Set([...(prev.colors || []), currColor])),
       images: [...(prev.images || []), ...newImages],
       files: [...(prev.files || []), ...currFiles],
     }));

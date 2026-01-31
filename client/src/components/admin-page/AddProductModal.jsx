@@ -18,7 +18,6 @@ export default function AddProductModal({ clothes, addToClothes }) {
       discount: 0,
       salesPrice: "0.00",
       images: [],
-      colors: [],
       files: [],
     }),
     []
@@ -86,7 +85,6 @@ export default function AddProductModal({ clothes, addToClothes }) {
         ...product,
         files: [],
         images: [],
-        colors: [],
         price: Number(product.price),
         salesPrice: product.discount ? Number(product.salesPrice) : 0,
       };
@@ -108,7 +106,6 @@ export default function AddProductModal({ clothes, addToClothes }) {
       const code = resp.code;
 
       let images = [];
-      let colors = [];
 
       if (product.files?.length) {
         const perFileColors = (product.images || []).map((img) => img.color || null);
@@ -127,14 +124,12 @@ export default function AddProductModal({ clothes, addToClothes }) {
 
         notify(enqueueSnackbar, imgResp.msg || "All images uploaded.", imgResp.status);
         images = imgResp.images ?? [];
-        colors = imgResp.colors ?? [];
       }
 
       const productForUI = {
         ...createPayload,
         code,
         images,
-        colors,
       };
 
       addToClothes([...clothes, productForUI]);
@@ -177,14 +172,14 @@ export default function AddProductModal({ clothes, addToClothes }) {
                   <h2 className="text-sm font-semibold tracking-[0.18em] uppercase text-black">
                     Add New Product
                   </h2>
-                  {product.colors?.length > 0 && (
+                  {product.images?.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {product.colors.map((c) => (
+                      {product.images.map((img) => (
                         <span
-                          key={c}
+                          key={img.color}
                           className="h-5 w-5 rounded-full border border-black/20"
-                          style={{ backgroundColor: c }}
-                          title={c}
+                          style={{ backgroundColor: img.color }}
+                          title={img.color}
                         />
                       ))}
                     </div>
@@ -316,12 +311,10 @@ export default function AddProductModal({ clothes, addToClothes }) {
                     Add new image
                   </button>
 
-                  {product.colors?.length > 0 && (
+                  {product.images?.length > 0 && (
                     <button
                       type="button"
-                      onClick={() =>
-                        setProduct((p) => ({ ...p, images: [], colors: [], files: [] }))
-                      }
+                      onClick={() => setProduct((p) => ({ ...p, images: [], files: [] }))}
                       className="ml-auto border border-black/15 px-4 py-2 text-xs font-semibold tracking-[0.18em] uppercase hover:border-black"
                     >
                       Reset images

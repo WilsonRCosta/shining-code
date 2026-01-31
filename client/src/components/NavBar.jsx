@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { useSnackbar } from "notistack";
 import { FaBars, FaHeart, FaShoppingCart, FaTimes, FaWallet } from "react-icons/fa";
 
 import { WishlistContext } from "../contexts/WishlistContext";
 import { CartContext } from "../contexts/CartContext";
 import { UserContext } from "../contexts/UserContext";
 import clothesService from "../service/api-client";
+import { notify } from "../utils/notify";
 
 const navLinkClass =
   "px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900 hover:text-neutral-500 transition";
@@ -15,6 +17,7 @@ const navLinkActive = "text-neutral-400";
 export default function NavBar() {
   const { wishlist } = useContext(WishlistContext);
   const { cart } = useContext(CartContext);
+  const { enqueueSnackbar } = useSnackbar();
   const { userProvider, clearContext, isAdmin } = useContext(UserContext);
   const [user] = userProvider;
 
@@ -31,7 +34,9 @@ export default function NavBar() {
   const handleLogout = (e) => {
     e.preventDefault();
     clearContext();
-    clothesService().logoutUser();
+    clothesService()
+      .logoutUser()
+      .then((res) => notify(enqueueSnackbar, res.data?.msg, res.status));
   };
 
   useEffect(() => setOpen(false), [location.pathname]);
@@ -48,9 +53,9 @@ export default function NavBar() {
       className={`sticky top-0 z-50 ${scrolled ? "bg-white/90 backdrop-blur border-b border-black/10" : "bg-white border-b border-black/5"}`}
     >
       <div className="mx-auto max-w-6xl px-4">
-        <div className="h-[72px] flex items-center justify-between gap-3">
+        <div className="h-18 flex items-center justify-between gap-3">
           {/* Brand */}
-          <Link to="/" className="flex items-center gap-3 min-w-[180px]">
+          <Link to="/" className="flex items-center gap-3 min-w-45">
             <img
               src="/logo.png"
               alt="Shining Code"
@@ -143,7 +148,7 @@ export default function NavBar() {
             >
               <FaShoppingCart />
               {cartCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-black text-white text-[10px] leading-[18px] text-center font-bold">
+                <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-black text-white text-[10px] leading-4.5 text-center font-bold">
                   {cartCount}
                 </span>
               )}
@@ -156,7 +161,7 @@ export default function NavBar() {
             >
               <FaHeart />
               {wishCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-black text-white text-[10px] leading-[18px] text-center font-bold">
+                <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-black text-white text-[10px] leading-4.5 text-center font-bold">
                   {wishCount}
                 </span>
               )}

@@ -41,10 +41,11 @@ export default function ClothesDetails() {
     return Number(unit) * Number(quantity);
   }, [cloth, quantity]);
 
-  const colors = useMemo(() => {
-    const imgs = cloth?.images || [];
-    return Array.from(new Set(imgs.map((im) => im?.color).filter(Boolean)));
-  }, [cloth]);
+  const colors = useMemo(
+    () =>
+      Array.from(new Set((cloth?.images || []).map((im) => im?.color).filter(Boolean))),
+    [cloth]
+  );
 
   const imagesOfCurrentColor = useMemo(() => {
     if (!cloth || !currImage) return [];
@@ -61,15 +62,15 @@ export default function ClothesDetails() {
   }, [currImage?.color]);
 
   const findImageIndex = () => {
-    if (!currImage) return { imgsWithColor: [], currImgIdx: -1 };
-    const imgsWithColor = imagesOfCurrentColor;
+    if (!currImage) return { imagesWithColor: [], currImgIdx: -1 };
+    const imagesWithColor = imagesOfCurrentColor;
     const sameImg = (a, b) =>
       a?.fileId && b?.fileId
         ? String(a.fileId) === String(b.fileId)
         : a?.name === b?.name;
 
-    const currImgIdx = imgsWithColor.findIndex((i) => sameImg(i, currImage));
-    return { imgsWithColor, currImgIdx };
+    const currImgIdx = imagesWithColor.findIndex((i) => sameImg(i, currImage));
+    return { imagesWithColor, currImgIdx };
   };
 
   const handleChangeCurrImageClickInColor = (clickedColor) => {
@@ -95,9 +96,9 @@ export default function ClothesDetails() {
   };
 
   const handleChangeCurrImageClickInArrows = (offset) => {
-    const { imgsWithColor, currImgIdx } = findImageIndex();
+    const { imagesWithColor, currImgIdx } = findImageIndex();
     if (currImgIdx < 0) return;
-    const next = imgsWithColor[currImgIdx + offset];
+    const next = imagesWithColor[currImgIdx + offset];
     if (next) setCurrImage(next);
   };
 
@@ -160,8 +161,8 @@ export default function ClothesDetails() {
 
   useEffect(() => {
     if (!currImage) return;
-    const { imgsWithColor, currImgIdx } = findImageIndex();
-    setNextImage(currImgIdx >= 0 && currImgIdx < imgsWithColor.length - 1);
+    const { imagesWithColor, currImgIdx } = findImageIndex();
+    setNextImage(currImgIdx >= 0 && currImgIdx < imagesWithColor.length - 1);
     setPrevImage(currImgIdx > 0);
   }, [currImage]);
 

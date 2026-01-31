@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { notify } from "../../utils/notify";
 
-export default function CheckoutForm({ amount, onSuccess }) {
+export default function CheckoutForm({ amount }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();

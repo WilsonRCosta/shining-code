@@ -183,7 +183,6 @@ const getError = (err) => ({
 const getImageInfo = (resp) => ({
   msg: resp.data.msg,
   images: resp.data.images,
-  colors: resp.data.colors,
   status: resp.status,
 });
 

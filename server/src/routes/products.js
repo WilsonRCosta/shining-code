@@ -95,7 +95,6 @@ router.put(
     return res.status(result.status).json({
       msg: result.msg,
       images: result.images,
-      colors: result.colors,
     });
   })
 );

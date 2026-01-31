@@ -35,8 +35,6 @@ const getProductsTotalAmount = async (cart) => {
 
 const createProduct = (product) => {
   delete product.code;
-  delete product.files;
-  delete product.colors;
 
   if (Array.isArray(product.images)) {
     product.images = product.images.map(({ data, ...rest }) => rest);
@@ -46,8 +44,6 @@ const createProduct = (product) => {
 };
 
 const updateProductAndImages = async (code, payload) => {
-  delete payload.colors;
-
   const existing = await products.findOne({ code });
   if (!existing) return { status: 404, msg: `${code} does not exist.` };
 
@@ -69,11 +65,6 @@ const updateProductAndImages = async (code, payload) => {
   }
 
   const updated = await products.findOneAndUpdate({ code }, payload, { new: true });
-
-  updated.colors = Array.from(
-    new Set((updated.images || []).map((img) => img?.color).filter(Boolean))
-  );
-  await updated.save();
 
   if (removedIds.length) {
     await imageService.deleteManyByIds(removedIds);
@@ -128,22 +119,11 @@ const addImagesToProduct = async (code, files, colorsRaw = []) => {
     { new: true }
   );
 
-  await updateColors(updated);
-
   return {
     status: 200,
     msg: `All images of ${code} uploaded.`,
     images: updated.images,
-    colors: updated.colors,
   };
-};
-
-const updateColors = async (doc) => {
-  doc.colors = Array.from(
-    new Set((doc.images || []).map((img) => img.color).filter(Boolean))
-  );
-  await doc.save();
-  return doc;
 };
 
 module.exports = {

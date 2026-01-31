@@ -11,7 +11,7 @@ An admin area is included for managing products, pricing, discounts, and product
 ![Home page](client/public/readme/home.png)
 ![Product page](client/public/readme/catalog.png)
 ![Wishlist](client/public/readme/wishlist.png)
-![Shopping Bag](client/public/readme/bag.png)
+![Shopping Cart](client/public/readme/bag.png)
 
 ## 🧰 Tech Stack
 ### Frontend

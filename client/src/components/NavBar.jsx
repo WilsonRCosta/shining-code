@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { FaBars, FaTimes, FaHeart, FaShoppingCart } from "react-icons/fa";
 
 import { WishlistContext } from "../contexts/WishlistContext";
-import { BagContext } from "../contexts/BagContext";
+import { CartContext } from "../contexts/CartContext";
 import { UserContext } from "../contexts/UserContext";
 import clothesService from "../service/api-client";
 
@@ -14,7 +14,7 @@ const navLinkActive = "text-neutral-400";
 
 export default function NavBar() {
   const { wishlist } = useContext(WishlistContext);
-  const { cart } = useContext(BagContext);
+  const { cart } = useContext(CartContext);
   const { userProvider, clearContext, isAdmin } = useContext(UserContext);
   const [user] = userProvider;
 

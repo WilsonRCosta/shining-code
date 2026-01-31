@@ -4,7 +4,7 @@ import NavBar from "../components/NavBar";
 import clothesService, { resolveProductImage } from "../service/api-client";
 import PathBreadcrumb from "../components/clothes-page/PathBreadcrumb";
 import LoadingDimmer from "../components/LoadingDimmer";
-import { BagContext } from "../contexts/BagContext";
+import { CartContext } from "../contexts/CartContext";
 import { getClosestColor } from "../utils/color-utils";
 import { updateLocalCart, updateLocalWishlist } from "../service/local-storage";
 import { WishlistContext } from "../contexts/WishlistContext";
@@ -27,7 +27,7 @@ export default function ClothesDetails() {
   const [hasNextImage, setNextImage] = useState(false);
   const [hasPrevImage, setPrevImage] = useState(false);
 
-  const { cart, setCart } = useContext(BagContext);
+  const { cart, setCart } = useContext(CartContext);
   const { wishlist, setWishlist } = useContext(WishlistContext);
 
   const isWishlisted = useMemo(() => {

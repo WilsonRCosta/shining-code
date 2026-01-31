@@ -16,6 +16,23 @@ const getProductsByCode = (code) => {
   return products.findOne({ code });
 };
 
+const getProductsTotalAmount = async (cart) => {
+  const foundProducts = await products.find({
+    _id: { $in: cart.map((i) => i._id) },
+  });
+
+  let amount = 0;
+
+  for (const item of cart) {
+    const product = foundProducts.find((p) => p.id === item._id);
+    if (!product) continue;
+    const unitPrice = product.discount ? product.salesPrice : product.price;
+    amount += unitPrice * item.quantity;
+  }
+
+  return amount;
+};
+
 const createProduct = (product) => {
   delete product.code;
   delete product.files;
@@ -132,6 +149,7 @@ const updateColors = async (doc) => {
 module.exports = {
   getProducts,
   getProductsByCode,
+  getProductsTotalAmount,
   createProduct,
   addImagesToProduct,
   updateProductAndImages,

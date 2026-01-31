@@ -1,6 +1,16 @@
 import { Link } from "react-router-dom";
+import { useContext, useEffect } from "react";
+import { CartContext } from "../contexts/CartContext";
+import { clearLocalStorageKey, shoppingCartKey } from "../service/local-storage";
 
 export default function OrderConfirmation() {
+  const { setCart } = useContext(CartContext);
+
+  useEffect(() => {
+    setCart([]);
+    clearLocalStorageKey(shoppingCartKey);
+  }, [setCart]);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md w-full border border-black/10 p-6 text-center">

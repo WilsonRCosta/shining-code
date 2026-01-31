@@ -9,7 +9,7 @@ import Register from "./pages/Register";
 import ShoppingCart from "./pages/ShoppingCart";
 import Wishlist from "./pages/Wishlist";
 
-import BagContextProvider from "./contexts/BagContext";
+import CartContextProvider from "./contexts/CartContext";
 import UserContextProvider from "./contexts/UserContext";
 import WishlistContextProvider from "./contexts/WishlistContext";
 import { SnackbarProvider } from "notistack";
@@ -34,7 +34,7 @@ export default function App() {
         >
           <UserContextProvider>
             <WishlistContextProvider>
-              <BagContextProvider>
+              <CartContextProvider>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/wishlist" element={<Wishlist />} />
@@ -46,7 +46,7 @@ export default function App() {
                   <Route path="/clothes/:genre" element={<Clothes />} />
                   <Route path="/clothes/:genre/:code" element={<ClothesDetails />} />
                 </Routes>
-              </BagContextProvider>
+              </CartContextProvider>
             </WishlistContextProvider>
           </UserContextProvider>
         </SnackbarProvider>

@@ -3,49 +3,44 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 
 import NavBar from "../components/NavBar";
-import { BagContext } from "../contexts/BagContext";
-import {
-  clearLocalStorageKey,
-  deleteFromLocalStorage,
-  shoppingCartKey,
-} from "../service/local-storage";
+import { CartContext } from "../contexts/CartContext";
+import { deleteFromLocalStorage, shoppingCartKey } from "../service/local-storage";
 import clothesService, { resolveProductImage } from "../service/api-client";
 import StripeWrapper from "../components/checkout-page/StripeWrapper";
 import CheckoutForm from "../components/checkout-page/CheckoutForm";
+import { useSnackbar } from "notistack";
+import { notify } from "../utils/notify";
 
 export default function ShoppingCart() {
-  const { cart, setCart, setTotal } = useContext(BagContext);
+  const { cart, setCart } = useContext(CartContext);
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
-  const [loadingPI, setLoadingPI] = useState(false);
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [paymentMismatch, setPaymentMismatch] = useState(false);
 
   const total = useMemo(() => {
     if (!Array.isArray(cart)) return 0;
     return cart.reduce((sum, item) => sum + Number(item.finalPrice || 0), 0);
   }, [cart]);
 
-  useEffect(() => {
-    setTotal(total);
-  }, [total, setTotal]);
-
   const startCheckout = async () => {
-    setLoadingPI(true);
+    setLoadingPayment(true);
     try {
-      const cs = await clothesService().createPaymentIntent(total);
-      setClientSecret(cs);
-      setShowCheckout(true);
-    } catch (e) {
-      console.error(e);
+      const res = await clothesService().createPaymentIntent(cart);
+      setClientSecret(res.clientSecret);
+      if (res.amountToPay === total) {
+        setShowCheckout(true);
+      } else {
+        setPaymentMismatch(true);
+        notify(enqueueSnackbar, "Invalid total amount to pay.", 400);
+      }
+    } catch (error) {
+      notify(enqueueSnackbar, error.msg, 400);
     } finally {
-      setLoadingPI(false);
+      setLoadingPayment(false);
     }
-  };
-
-  const onPaymentSuccessful = () => {
-    navigate("/order-confirmation");
-    setCart([]);
-    clearLocalStorageKey(shoppingCartKey);
   };
 
   const deleteItemFromCart = (item) => {
@@ -65,12 +60,12 @@ export default function ShoppingCart() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-black">
-            Shopping Bag
+            Shopping Cart
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
             {count === 1
-              ? "Your bag contains 1 product."
-              : `Your bag contains ${count} products.`}
+              ? "Your cart contains 1 product."
+              : `Your cart contains ${count} products.`}
           </p>
         </header>
 
@@ -228,16 +223,19 @@ export default function ShoppingCart() {
 
                 <button
                   type="button"
-                  className="mt-5 w-full bg-black text-white py-3"
+                  className="mt-5 w-full py-3 text-white bg-black transition disabled:bg-gray-400 disabled:text-gray-200 disabled:cursor-not-allowed"
                   onClick={startCheckout}
-                  disabled={loadingPI || total <= 0}
+                  disabled={loadingPayment || total <= 0 || paymentMismatch}
                 >
-                  {loadingPI ? "Preparing payment..." : "Checkout"}
+                  {loadingPayment ? "Preparing payment..." : "Checkout"}
                 </button>
 
                 {showCheckout && clientSecret && (
                   <StripeWrapper clientSecret={clientSecret}>
-                    <CheckoutForm amount={total} onSuccess={onPaymentSuccessful} />
+                    <CheckoutForm
+                      amount={total}
+                      onSuccess={() => navigate("/order-confirmation")}
+                    />
                   </StripeWrapper>
                 )}
                 <Link
@@ -251,7 +249,7 @@ export default function ShoppingCart() {
           </div>
         ) : (
           <div className="mt-16 border border-black/10 p-8 text-center max-w-xl mx-auto">
-            <h3 className="text-lg font-semibold text-black">Your bag is empty.</h3>
+            <h3 className="text-lg font-semibold text-black">Your cart is empty.</h3>
             <p className="mt-2 text-sm text-neutral-500">
               Explore our store and add something you love.
             </p>

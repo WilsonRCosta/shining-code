@@ -1,25 +1,34 @@
 const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const productService = require("../service/product-service");
 
 router.post("/payment-intent", async (req, res) => {
   try {
-    const { amount, currency = "eur" } = req.body;
+    const { cart, currency = "eur" } = req.body;
 
-    const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    if (!Array.isArray(cart) || cart.length === 0) {
+      return res.status(400).json({ msg: "Invalid cart" });
+    }
+
+    const amount = await productService.getProductsTotalAmount(cart);
+
+    if (amount <= 0) {
       return res.status(400).json({ msg: "Invalid amount" });
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(numericAmount * 100),
+      amount: Math.round(amount * 100),
       currency: currency,
       automatic_payment_methods: {
         enabled: true,
       },
     });
 
-    res.json({ clientSecret: paymentIntent.client_secret });
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      amountToPay: amount,
+    });
   } catch (error) {
     res.status(500).send({ msg: error.message });
   }

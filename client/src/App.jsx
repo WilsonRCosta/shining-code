@@ -1,19 +1,19 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import bg from "./images/background.png";
 
-import Home from "./components/Home";
-import Clothes from "./components/clothes-page/Clothes";
-import ClothesDetails from "./components/cloth-details-page/ClothesDetails";
-import Wishlist from "./components/Wishlist";
-import ShoppingCart from "./components/ShoppingCart";
-import Register from "./components/Register";
-import AdminProducts from "./components/admin-page/AdminProducts";
+import AdminProducts from "./pages/AdminProducts";
+import Clothes from "./pages/Clothes";
+import ClothesDetails from "./pages/ClothesDetails";
+import Home from "./pages/Home";
+import Register from "./pages/Register";
+import ShoppingCart from "./pages/ShoppingCart";
+import Wishlist from "./pages/Wishlist";
 
+import BagContextProvider from "./contexts/BagContext";
 import UserContextProvider from "./contexts/UserContext";
 import WishlistContextProvider from "./contexts/WishlistContext";
-import BagContextProvider from "./contexts/BagContext";
 import { SnackbarProvider } from "notistack";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 export default function App() {
   const wrapper = React.createRef();
@@ -21,7 +21,7 @@ export default function App() {
     <div
       className="min-h-screen"
       style={{
-        backgroundImage: `url(${bg})`,
+        backgroundImage: "url(/background.png)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -39,6 +39,7 @@ export default function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/shopping-cart" element={<ShoppingCart />} />
+                  <Route path="/order-confirmation" element={<OrderConfirmation />} />
                   <Route path="/signin" element={<Register />} />
                   <Route path="/clothes/sales" element={<Clothes />} />
                   <Route path="/admin/products" element={<AdminProducts />} />

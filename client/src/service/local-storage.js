@@ -1,6 +1,6 @@
 const authKey = "AUTH";
-const shoppingCartKey = "SHOPPING-CART";
-const wishlistKey = "WISHLIST";
+export const shoppingCartKey = "SHOPPING-CART";
+export const wishlistKey = "WISHLIST";
 
 const readJSON = (key, fallback) => {
   try {
@@ -40,9 +40,7 @@ export const updateLocalWishlist = (item) => {
   writeJSON(wishlistKey, wishlist);
 };
 
-export const deleteFromLocalStorage = (src, code) => {
-  const key = src === "wish" ? wishlistKey : src === "cart" ? shoppingCartKey : null;
-
+export const deleteFromLocalStorage = (key, code) => {
   if (!key) throw new Error("Error! Unknown source to perform delete action.");
 
   const arr = readJSON(key, []);
@@ -50,6 +48,10 @@ export const deleteFromLocalStorage = (src, code) => {
   if (idx >= 0) arr.splice(idx, 1);
 
   writeJSON(key, arr);
+};
+
+export const clearLocalStorageKey = (key) => {
+  writeJSON(key, []);
 };
 
 export const setUserInfo = (user, token) => {

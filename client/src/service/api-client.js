@@ -14,6 +14,7 @@ const api = axios.create({
 
 const PRODUCTS_URL = "/api/products";
 const USERS_URL = "/api/auth";
+const PAYMENTS_URL = "/api/payments";
 
 // --------------------
 // Attach access token automatically
@@ -145,6 +146,13 @@ export default function clothesService() {
         .catch(getError),
 
     logoutUser: () => api.post(`${USERS_URL}/logout`),
+
+    // PAYMENTS
+    createPaymentIntent: (amount) =>
+      api
+        .post(`${PAYMENTS_URL}/payment-intent`, { amount })
+        .then((resp) => resp.data.clientSecret)
+        .catch(getError),
   };
 }
 

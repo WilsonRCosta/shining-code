@@ -1,11 +1,12 @@
 import React, { createContext, useState } from "react";
+import { wishlistKey } from "../service/local-storage";
 
 export const WishlistContext = createContext(null);
 
 const WishlistContextProvider = (props) => {
   const [wishlist, setWishlist] = useState(
-    Array.isArray(JSON.parse(localStorage.getItem("WISHLIST")))
-      ? JSON.parse(localStorage.getItem("WISHLIST"))
+    Array.isArray(JSON.parse(localStorage.getItem(wishlistKey)))
+      ? JSON.parse(localStorage.getItem(wishlistKey))
       : []
   );
 

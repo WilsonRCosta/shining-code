@@ -1,31 +1,59 @@
-import { useContext, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 
-import NavBar from "./NavBar";
+import NavBar from "../components/NavBar";
 import { BagContext } from "../contexts/BagContext";
-import { deleteFromLocalStorage } from "../service/local-storage";
-import { notify } from "../utils/notify";
-import { useSnackbar } from "notistack";
-import { resolveProductImage } from "../service/api-client";
+import {
+  clearLocalStorageKey,
+  deleteFromLocalStorage,
+  shoppingCartKey,
+} from "../service/local-storage";
+import clothesService, { resolveProductImage } from "../service/api-client";
+import StripeWrapper from "../components/checkout-page/StripeWrapper";
+import CheckoutForm from "../components/checkout-page/CheckoutForm";
 
 export default function ShoppingCart() {
-  const { cart, setCart } = useContext(BagContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { cart, setCart, setTotal } = useContext(BagContext);
+  const navigate = useNavigate();
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
+  const [loadingPI, setLoadingPI] = useState(false);
 
   const total = useMemo(() => {
-    if (!Array.isArray(cart)) return "0.00";
-    return cart
-      .reduce((sum, item) => sum + parseFloat(item.finalPrice || 0), 0)
-      .toFixed(2);
+    if (!Array.isArray(cart)) return 0;
+    return cart.reduce((sum, item) => sum + Number(item.finalPrice || 0), 0);
   }, [cart]);
+
+  useEffect(() => {
+    setTotal(total);
+  }, [total, setTotal]);
+
+  const startCheckout = async () => {
+    setLoadingPI(true);
+    try {
+      const cs = await clothesService().createPaymentIntent(total);
+      setClientSecret(cs);
+      setShowCheckout(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingPI(false);
+    }
+  };
+
+  const onPaymentSuccessful = () => {
+    navigate("/order-confirmation");
+    setCart([]);
+    clearLocalStorageKey(shoppingCartKey);
+  };
 
   const deleteItemFromCart = (item) => {
     const newCart = [...cart];
     const itemIdx = newCart.findIndex((i) => i.code === item.code);
     if (itemIdx > -1) newCart.splice(itemIdx, 1);
     setCart(newCart);
-    deleteFromLocalStorage("cart", item.code);
+    deleteFromLocalStorage(shoppingCartKey, item.code);
   };
 
   const count = Array.isArray(cart) ? cart.length : 0;
@@ -189,7 +217,9 @@ export default function ShoppingCart() {
 
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-neutral-600">Total</span>
-                  <span className="text-lg font-semibold text-black">{total}€</span>
+                  <span className="text-lg font-semibold text-black">
+                    {total.toFixed(2)}€
+                  </span>
                 </div>
 
                 <p className="mt-3 text-xs text-neutral-500">
@@ -198,14 +228,18 @@ export default function ShoppingCart() {
 
                 <button
                   type="button"
-                  className="mt-5 w-full bg-black text-white py-3 text-xs font-semibold tracking-[0.22em] uppercase hover:bg-neutral-800 transition"
-                  onClick={() =>
-                    notify(enqueueSnackbar, "Checkout not implemented yet.", 400)
-                  }
+                  className="mt-5 w-full bg-black text-white py-3"
+                  onClick={startCheckout}
+                  disabled={loadingPI || total <= 0}
                 >
-                  Checkout
+                  {loadingPI ? "Preparing payment..." : "Checkout"}
                 </button>
 
+                {showCheckout && clientSecret && (
+                  <StripeWrapper clientSecret={clientSecret}>
+                    <CheckoutForm amount={total} onSuccess={onPaymentSuccessful} />
+                  </StripeWrapper>
+                )}
                 <Link
                   to="/clothes/sales"
                   className="mt-3 block text-center text-xs font-semibold tracking-[0.18em] uppercase text-neutral-600 hover:text-black"

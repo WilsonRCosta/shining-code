@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import NavBar from "../NavBar";
-import clothesService from "../../service/api-client";
-import LoadingDimmer from "../LoadingDimmer";
-import AddProductModal from "./AddProductModal";
-import SortProducts from "./SortProducts";
-import ProductsTable from "./ProductsTable";
+import NavBar from "../components/NavBar";
+import clothesService from "../service/api-client";
+import LoadingDimmer from "../components/LoadingDimmer";
+import AddProductModal from "../components/admin-page/AddProductModal";
+import SortProducts from "../components/admin-page/SortProducts";
+import ProductsTable from "../components/admin-page/ProductsTable";
 
 export default function AdminProducts() {
   const [clothes, setClothes] = useState([]);

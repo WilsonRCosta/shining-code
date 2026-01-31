@@ -24,6 +24,11 @@ export default function OrderConfirmation() {
     [searchParams]
   );
 
+  const clearCart = () => {
+    setCart([]);
+    clearLocalStorageKey(shoppingCartKey);
+  };
+
   useEffect(() => {
     if (!pi && !clientSecret) {
       setStatus("failed");
@@ -35,8 +40,7 @@ export default function OrderConfirmation() {
         .then((stripe) => stripe.retrievePaymentIntent(clientSecret))
         .then(({ paymentIntent }) => {
           if (paymentIntent?.status === "succeeded") {
-            setCart([]);
-            clearLocalStorageKey(shoppingCartKey);
+            clearCart();
             setStatus("success");
             return;
           }
@@ -48,6 +52,8 @@ export default function OrderConfirmation() {
           setStatus("failed");
         });
     } else if (pi) {
+      // TODO: clear cart only after confirming payment with the server
+      clearCart();
       setStatus("pending");
     }
   }, [pi, clientSecret, setCart]);

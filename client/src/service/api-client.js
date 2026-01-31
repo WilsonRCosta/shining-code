@@ -1,8 +1,8 @@
 import axios from "axios";
 import {
+  deleteUser,
   getUserInfo as getStoredUserInfo,
   setUserInfo,
-  deleteUser,
 } from "./local-storage";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";

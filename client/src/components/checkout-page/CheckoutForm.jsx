@@ -1,12 +1,15 @@
 import React from "react";
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { notify } from "../../utils/notify";
 
 export default function CheckoutForm({ amount, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+
   const [isLoading, setIsLoading] = React.useState(false);
 
   const submitPayment = async (e) => {
@@ -27,7 +30,7 @@ export default function CheckoutForm({ amount, onSuccess }) {
       notify(enqueueSnackbar, error.message, 400);
     } else if (paymentIntent && paymentIntent.status === "succeeded") {
       notify(enqueueSnackbar, "Payment was successful!", 200);
-      onSuccess?.(paymentIntent);
+      navigate(`/order-confirmation?pid=${paymentIntent.id}`);
     }
     setIsLoading(false);
   };

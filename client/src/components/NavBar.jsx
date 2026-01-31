@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { FaBars, FaTimes, FaHeart, FaShoppingCart } from "react-icons/fa";
+import { FaBars, FaHeart, FaShoppingCart, FaTimes, FaWallet } from "react-icons/fa";
 
 import { WishlistContext } from "../contexts/WishlistContext";
 import { CartContext } from "../contexts/CartContext";
@@ -54,7 +54,7 @@ export default function NavBar() {
             <img
               src="/logo.png"
               alt="Shining Code"
-              className="h-12 w-12 object-contain"
+              className="h-12 w-12 object-contain rounded-2xl"
             />
             <span className="text-sm font-extrabold tracking-[-0.02em] text-neutral-900">
               SHINING CODE
@@ -128,6 +128,14 @@ export default function NavBar() {
             )}
 
             {/* Icon buttons with INSIDE badges (no clipping) */}
+            {user && (
+              <NavLink
+                to="/orders"
+                className="relative h-10 w-10 inline-flex items-center justify-center border border-black/10 hover:border-black/30 transition"
+              >
+                <FaWallet />
+              </NavLink>
+            )}
             <NavLink
               to="/shopping-cart"
               className="relative h-10 w-10 inline-flex items-center justify-center border border-black/10 hover:border-black/30 transition"
@@ -148,7 +156,7 @@ export default function NavBar() {
             >
               <FaHeart />
               {wishCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-black text-white text-[10px] leading-[18px] text-center font-bold">
+                <span className="absolute top-1 right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-black text-white text-[10px] leading-[18px] text-center font-bold">
                   {wishCount}
                 </span>
               )}
@@ -206,6 +214,16 @@ export default function NavBar() {
 
               <div className="h-px bg-black/10 my-2" />
 
+              {user && (
+                <NavLink
+                  to="/orders"
+                  className={({ isActive }) =>
+                    isActive ? `${navLinkClass} ${navLinkActive}` : navLinkClass
+                  }
+                >
+                  Orders
+                </NavLink>
+              )}
               <NavLink
                 to="/shopping-cart"
                 className={({ isActive }) =>
@@ -238,12 +256,12 @@ export default function NavBar() {
                     to="/admin/products"
                     className="md:hidden px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-900"
                   >
-                    Manage clothing
+                    Admin
                   </NavLink>
 
                   <button
                     type="button"
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="hidden md:inline-flex px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 hover:text-black transition"
                   >
                     Logout

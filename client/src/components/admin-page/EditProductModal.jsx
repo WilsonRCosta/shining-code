@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import clothesService, { resolveProductImage } from "../../service/api-client";
 import ImageAndColorGrid from "./ImageAndColorGrid";
 import { useSnackbar } from "notistack";

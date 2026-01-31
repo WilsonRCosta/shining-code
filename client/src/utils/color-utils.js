@@ -1,6 +1,5 @@
 import colorName from "color-name";
-import { rgb, lab } from "culori";
-import { differenceCiede2000 } from "culori";
+import { differenceCiede2000, lab, rgb } from "culori";
 
 /* ---------- helpers ---------- */
 

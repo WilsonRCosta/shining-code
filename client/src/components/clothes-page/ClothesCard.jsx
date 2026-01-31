@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { resolveProductImage } from "../../service/api-client";
@@ -13,6 +13,12 @@ export default function ClothesCard({
   const isWished = wishlist?.some((w) => w.code === cloth.code);
 
   const img = thumbnail?.currImage || cloth.images?.[0];
+
+  const colors = useMemo(
+    () =>
+      Array.from(new Set((cloth?.images || []).map((im) => im?.color).filter(Boolean))),
+    [cloth]
+  );
 
   return (
     <div className="group">
@@ -69,7 +75,7 @@ export default function ClothesCard({
 
         {/* color dots */}
         <div className="mt-3 flex flex-wrap gap-2">
-          {cloth.colors?.map((color) => (
+          {colors?.map((color) => (
             <button
               key={`${cloth.code}-${color}`}
               type="button"

@@ -1,5 +1,5 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useContext, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
 
 import NavBar from "../components/NavBar";
@@ -13,7 +13,6 @@ import { notify } from "../utils/notify";
 
 export default function ShoppingCart() {
   const { cart, setCart } = useContext(CartContext);
-  const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
@@ -63,9 +62,7 @@ export default function ShoppingCart() {
             Shopping Cart
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
-            {count === 1
-              ? "Your cart contains 1 product."
-              : `Your cart contains ${count} products.`}
+            {`Your cart contains ${count !== 1 ? `${count} products` : "1 product"}.`}
           </p>
         </header>
 
@@ -232,10 +229,7 @@ export default function ShoppingCart() {
 
                 {showCheckout && clientSecret && (
                   <StripeWrapper clientSecret={clientSecret}>
-                    <CheckoutForm
-                      amount={total}
-                      onSuccess={() => navigate("/order-confirmation")}
-                    />
+                    <CheckoutForm amount={total} />
                   </StripeWrapper>
                 )}
                 <Link

@@ -6,8 +6,8 @@ import NavBar from "../components/NavBar";
 import { WishlistContext } from "../contexts/WishlistContext";
 import { CartContext } from "../contexts/CartContext";
 import {
-  updateLocalCart,
   deleteFromLocalStorage,
+  updateLocalCart,
   wishlistKey,
 } from "../service/local-storage";
 

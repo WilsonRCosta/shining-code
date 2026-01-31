@@ -1,13 +1,12 @@
 import React, { createContext, useEffect, useMemo, useState } from "react";
-import { getUserInfo, deleteUser, setUserInfo } from "../service/local-storage";
+import { deleteUser, getUserInfo, setUserInfo } from "../service/local-storage";
 import { useNavigate } from "react-router-dom";
 
 export const UserContext = createContext(null);
 
 export default function UserContextProvider({ children }) {
-  const stored = useMemo(getUserInfo, []);
-  const [user, setUser] = useState(stored.user || "");
-  const [token, setToken] = useState(stored.token || "");
+  const [user, setUser] = useState(() => getUserInfo().user || "");
+  const [token, setToken] = useState(() => getUserInfo().token || "");
   const history = useNavigate();
 
   useEffect(() => setUserInfo(user, token), [user, token]);

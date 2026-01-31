@@ -7,20 +7,30 @@ export default function ClothesSortDropdown({ handleSortByPrice, handleSortBySal
   };
 
   return (
-    <div className="flex justify-end px-4">
-      <div className="w-full sm:w-auto">
-        <select
-          defaultValue=""
-          onChange={handleChange}
-          className="w-full sm:w-44 border border-black/15 bg-white px-3 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-black outline-none focus:border-black"
+    <div className="relative inline-block">
+      <select
+        defaultValue=""
+        onChange={handleChange}
+        className="w-auto max-w-full border border-black/10 bg-white pl-4 pr-10 py-2 text-xs font-semibold tracking-[0.18em] uppercase text-black outline-none focus:border-black appearance-none"
+      >
+        <option value="" disabled>
+          Sort by
+        </option>
+        <option value="sales">Sales</option>
+        <option value="price">Price</option>
+      </select>
+
+      {/* Custom arrow */}
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600">
+        <svg
+          viewBox="0 0 20 20"
+          className="h-3.5 w-3.5"
+          fill="currentColor"
+          aria-hidden="true"
         >
-          <option value="" disabled>
-            Sort by
-          </option>
-          <option value="sales">Sales</option>
-          <option value="price">Price</option>
-        </select>
-      </div>
+          <path d="M5.5 7.5 10 12l4.5-4.5" />
+        </svg>
+      </span>
     </div>
   );
 }

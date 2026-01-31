@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import AdminProducts from "./pages/AdminProducts";
 import Clothes from "./pages/Clothes";
@@ -14,6 +14,7 @@ import UserContextProvider from "./contexts/UserContext";
 import WishlistContextProvider from "./contexts/WishlistContext";
 import { SnackbarProvider } from "notistack";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import Orders from "./pages/Orders";
 
 export default function App() {
   const wrapper = React.createRef();
@@ -40,6 +41,7 @@ export default function App() {
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/shopping-cart" element={<ShoppingCart />} />
                   <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="/orders" element={<Orders />} />
                   <Route path="/signin" element={<Register />} />
                   <Route path="/clothes/sales" element={<Clothes />} />
                   <Route path="/admin/products" element={<AdminProducts />} />

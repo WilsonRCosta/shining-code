@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
-import clothesService from "../service/api-client";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 import NavBar from "../components/NavBar";
 import LoadingDimmer from "../components/LoadingDimmer";
@@ -9,9 +10,9 @@ import ClothesMenu from "../components/clothes-page/ClothesMenu";
 import ClothesCard from "../components/clothes-page/ClothesCard";
 import ClothesSortDropdown from "../components/clothes-page/ClothesSortDropdown";
 
-import { WishlistContext } from "../contexts/WishlistContext";
+import clothesService from "../service/api-client";
 import { updateLocalWishlist } from "../service/local-storage";
-import { useLocation, useParams } from "react-router-dom";
+import { WishlistContext } from "../contexts/WishlistContext";
 
 export default function Clothes() {
   const { genre } = useParams();
@@ -31,6 +32,7 @@ export default function Clothes() {
   const [activeType, setActiveType] = useState(null);
   const [activeBrand, setActiveBrand] = useState(null);
   const [activeInput, setActiveInput] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [currImages, setCurrImages] = useState([]);
 
@@ -174,6 +176,11 @@ export default function Clothes() {
         : removeMenuFilters();
   }, [activeBrand, activeType]);
 
+  useEffect(() => {
+    // close filters when route changes or when products reload, optional
+    setFiltersOpen(false);
+  }, [pathname, genre]);
+
   const productsCount = useMemo(
     () => (Array.isArray(currClothes) ? currClothes.length : 0),
     [currClothes]
@@ -191,6 +198,27 @@ export default function Clothes() {
         />
       ) : (
         <main className="mx-auto max-w-6xl px-4 py-6">
+          {filtersOpen && (
+            <div className="lg:hidden mt-4 border border-black/10 p-4">
+              <ClothesMenu
+                activeType={activeType}
+                activeBrand={activeBrand}
+                brands={brands}
+                types={types}
+                setActiveType={setActiveType}
+                setActiveBrand={setActiveBrand}
+              />
+
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="mt-4 w-full py-3 text-white bg-black transition hover:bg-neutral-800"
+              >
+                Apply filters
+              </button>
+            </div>
+          )}
+
           <div className="flex items-start justify-between gap-4">
             <PathBreadcrumb activeType={activeType} genre={genre} />
             <div className="text-[11px] font-extrabold tracking-[0.22em] uppercase text-neutral-600 pt-3">
@@ -204,15 +232,30 @@ export default function Clothes() {
               handleSearchInput={handleSearchInput}
               setActiveInput={setActiveInput}
             />
-            <ClothesSortDropdown
-              handleSortByPrice={handleSortByPrice}
-              handleSortBySales={handleSortBySales}
-            />
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((v) => !v)}
+                className="h-10 w-10 inline-flex items-center justify-center border border-black/10 hover:border-black/30 transition lg:hidden"
+                aria-label="Filters"
+                aria-expanded={filtersOpen}
+              >
+                {filtersOpen ? <FaTimes /> : <FaBars />}
+              </button>
+
+              <div className="flex-1 min-w-0">
+                <ClothesSortDropdown
+                  handleSortByPrice={handleSortByPrice}
+                  handleSortBySales={handleSortBySales}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
             {/* Sidebar filters */}
-            <div className="lg:sticky lg:top-24 h-fit">
+            <div className="hidden lg:block lg:sticky lg:top-24 h-fit">
               <ClothesMenu
                 activeType={activeType}
                 activeBrand={activeBrand}
